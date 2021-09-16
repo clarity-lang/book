@@ -1,4 +1,4 @@
-import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v0.13.0/index.ts';
+import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v0.15.2/index.ts';
 
 const contractName = 'multisig-vault';
 
