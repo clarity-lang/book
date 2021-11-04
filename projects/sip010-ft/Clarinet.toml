@@ -1,0 +1,10 @@
+[project]
+name = "sip010-ft"
+requirements = []
+[contracts.clarity-coin]
+path = "contracts/clarity-coin.clar"
+depends_on = ["sip010-ft-trait"]
+
+[contracts.sip010-ft-trait]
+path = "contracts/sip010-ft-trait.clar"
+depends_on = []

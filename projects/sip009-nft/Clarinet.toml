@@ -1,0 +1,11 @@
+[project]
+name = "sip009-nft"
+requirements = []
+
+[contracts.marvin-token]
+path = "contracts/marvin-token.clar"
+depends_on = ["sip009-nft-trait"]
+
+[contracts.sip009-nft-trait]
+path = "contracts/sip009-nft-trait.clar"
+depends_on = []
