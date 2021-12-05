@@ -1,0 +1,31 @@
+[project]
+name = "tiny-market"
+requirements = []
+
+[contracts.sip009-nft]
+path = "contracts/sip009-nft.clar"
+depends_on = ["sip009-nft-trait"]
+
+[contracts.bogus-nft]
+path = "contracts/sip009-nft.clar"
+depends_on = ["sip009-nft-trait"]
+
+[contracts.sip009-nft-trait]
+path = "contracts/sip009-nft-trait.clar"
+depends_on = []
+
+[contracts.sip010-ft-trait]
+path = "contracts/sip010-ft-trait.clar"
+depends_on = []
+
+[contracts.sip010-token]
+path = "contracts/sip010-token.clar"
+depends_on = ["sip010-ft-trait"]
+
+[contracts.bogus-ft]
+path = "contracts/sip010-token.clar"
+depends_on = ["sip010-ft-trait"]
+
+[contracts.tiny-market]
+path = "contracts/tiny-market.clar"
+depends_on = ["sip009-nft-trait", "sip010-ft-trait"]

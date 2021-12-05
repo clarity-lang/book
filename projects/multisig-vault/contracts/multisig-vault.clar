@@ -9,7 +9,7 @@
 (define-constant err-votes-required-not-met (err u104))
 
 (define-data-var members (list 100 principal) (list))
-(define-data-var votes-required uint u0)
+(define-data-var votes-required uint u1)
 (define-map votes {member: principal, recipient: principal} {decision: bool})
 
 (define-public (start (new-members (list 100 principal)) (new-votes-required uint))
