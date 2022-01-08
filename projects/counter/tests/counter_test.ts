@@ -1,6 +1,5 @@
 
-import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v0.14.0/index.ts';
-import { assertEquals } from 'https://deno.land/std@0.90.0/testing/asserts.ts';
+import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v0.15.2/index.ts';
 
 Clarinet.test({
 	name: "get-count returns u0 for principals that never called count-up before",
