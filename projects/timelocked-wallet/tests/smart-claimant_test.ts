@@ -1,5 +1,5 @@
 
-import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v0.14.0/index.ts';
+import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v0.24.0/index.ts';
 
 Clarinet.test({
 	name: "Disburses tokens once it can claim the time-locked wallet balance",
