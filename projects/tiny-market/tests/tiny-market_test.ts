@@ -1,5 +1,5 @@
-import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v0.24.0/index.ts';
-import { assertEquals } from 'https://deno.land/std@0.90.0/testing/asserts.ts';
+import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v0.31.0/index.ts';
+import { assertEquals } from 'https://deno.land/std@0.125.0/testing/asserts.ts';
 
 const contractName = 'tiny-market';
 
