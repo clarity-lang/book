@@ -1,0 +1,36 @@
+<html>
+	<head>
+		<link rel="stylesheet" href="/style.css"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Clarity Playground</title>
+	</head>
+	<body class="playground">
+		<div class="code">
+			<div class="buttons"><button class="copy" title="Copy"></button><button class="reset" title="Reset"></button><button class="play" title="Execute"></button><button class="share" title="Share"></button></div>
+			<pre class="language-clarity"><code id="code_field" class="language-clarity" contenteditable autocorrect="off" autocapitalize="off" spellcheck="false"></code></pre>
+		</div>
+		<script>
+			if (document.location.hash.substr(0,2) === '#e')
+				{
+				const field = document.getElementById('code_field');
+				const [code_part,options_part] = document.location.hash.substr(2).split('|');
+				const code = code_part && decodeURIComponent(code_part);
+				const options = options_part && decodeURIComponent(options_part); 
+				code && (field.textContent = code);
+				options && (field.parentElement.parentElement.dataset.options = options);
+				try
+					{
+					const opt = JSON.parse(options);
+					if (opt && opt.nonplayable)
+						{
+						document.querySelector(".play").remove();
+						document.querySelector(".reset").remove();
+						field.contentEditable = false;
+						}
+					}
+				catch (error) {}
+				}
+		</script>
+		<script src="/client.min.js" async></script>
+	</body>
+</html>
