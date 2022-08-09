@@ -1,7 +1,7 @@
 ;; sip009-nft
 ;; A SIP009-compliant NFT with a mint function.
 
-(impl-trait .sip009-nft-trait.sip009-nft-trait)
+(impl-trait 'SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait.nft-trait)
 
 (define-constant contract-owner tx-sender)
 

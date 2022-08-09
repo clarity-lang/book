@@ -55,30 +55,19 @@ Let us create a new Clarinet project for our custom NFT contract.
 clarinet new sip010-ft
 ```
 
-Inside the `sip010-ft` project folder, we first create a new contract for the
-trait.
+Inside the `sip010-ft` project folder, we first add the requirement for the
+trait, using the
+[official mainnet deployment address](https://explorer.stacks.co/txid/0x99e01721e57adc2c24f7d371b9d302d581dba1d27250c7e25ea5f241af14c387?chain=mainnet).
 
 ```bash
-clarinet contract new sip010-ft-trait
+clarinet requirements add SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard
 ```
-
-Copy the [SIP010 FT trait](ch10-03-sip010-ft-standard.md#the-sip010-ft-trait) to
-`sip010-ft-trait.clar`. You can delete the generated test file
-`sip010-ft-trait_test.ts`.
 
 We then create the contract that will implement our custom fungible token.
 Another flashy name is welcome.
 
 ```bash
 clarinet contract new clarity-coin
-```
-
-Do not forget to define the dependency in `Clarinet.toml`.
-
-```toml
-[contracts.clarity-coin]
-path = "contracts/clarity-coin.clar"
-depends_on = ["sip010-ft-trait"]
 ```
 
 ### Preparation work
@@ -88,17 +77,7 @@ Asserting
 with the trait is the first step as usual.
 
 ```Clarity,{"nonplayable":true}
-(impl-trait .sip010-ft-trait.sip010-ft-trait)
-```
-
-The trait obviously also has an
-[official mainnet deployment address](https://explorer.stacks.co/txid/0x99e01721e57adc2c24f7d371b9d302d581dba1d27250c7e25ea5f241af14c387?chain=mainnet).
-We will add the trait reference in a comment like we did for the SIP009 NFT for
-completeness.
-
-```Clarity,{"nonplayable":true}
-;; SIP010 trait on mainnet
-;; (impl-trait 'SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard.sip-010-trait)
+(impl-trait 'SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard.sip-010-trait)
 ```
 
 We can then add the token definition, a constant for the contract deployer, and

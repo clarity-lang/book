@@ -667,11 +667,9 @@ and add an entry for our `bogus-nft` by coping the entry for `sip009-nf`.
 ```toml
 [contracts.sip009-nft]
 path = "contracts/sip009-nft.clar"
-depends_on = ["sip009-nft-trait"]
 
 [contracts.bogus-nft]
 path = "contracts/sip009-nft.clar"
-depends_on = ["sip009-nft-trait"]
 ```
 
 Then we do the same for the payment asset. We will call the new entry
@@ -680,11 +678,9 @@ Then we do the same for the payment asset. We will call the new entry
 ```toml
 [contracts.sip010-token]
 path = "contracts/sip010-token.clar"
-depends_on = ["sip010-ft-trait"]
 
 [contracts.bogus-ft]
 path = "contracts/sip010-token.clar"
-depends_on = ["sip010-ft-trait"]
 ```
 
 From this point on, `sip009-nft.clar` and `sip010-token.clar` will be

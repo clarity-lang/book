@@ -1,7 +1,7 @@
 ;; sip010-token
 ;; A SIP010-compliant fungible token with a mint function.
 
-(impl-trait .sip010-ft-trait.sip010-ft-trait)
+(impl-trait 'SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard.sip-010-trait)
 
 (define-constant contract-owner tx-sender)
 

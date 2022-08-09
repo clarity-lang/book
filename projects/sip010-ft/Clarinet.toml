@@ -1,10 +1,8 @@
 [project]
 name = "sip010-ft"
-requirements = []
+
+[[project.requirements]]
+contract_id = "SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard"
+
 [contracts.clarity-coin]
 path = "contracts/clarity-coin.clar"
-depends_on = ["sip010-ft-trait"]
-
-[contracts.sip010-ft-trait]
-path = "contracts/sip010-ft-trait.clar"
-depends_on = []

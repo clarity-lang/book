@@ -72,7 +72,6 @@ name = "counter"
 requirements = []
 [contracts.counter]
 path = "contracts/counter.clar"
-depends_on = []
 ```
 
 The files found in the `settings` directory are used for deployment:

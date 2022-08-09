@@ -1,11 +1,8 @@
 [project]
 name = "sip009-nft"
-requirements = []
+
+[[project.requirements]]
+contract_id = "SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait"
 
 [contracts.stacksies]
 path = "contracts/stacksies.clar"
-depends_on = ["sip009-nft-trait"]
-
-[contracts.sip009-nft-trait]
-path = "contracts/sip009-nft-trait.clar"
-depends_on = []
