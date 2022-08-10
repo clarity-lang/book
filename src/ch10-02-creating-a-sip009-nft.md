@@ -58,16 +58,24 @@ Let us create a new Clarinet project for our custom NFT contract.
 clarinet new sip009-nft
 ```
 
-Inside the `sip009-nft` project folder, we first create a new contract for the
-trait.
+The `nft-trait` trait that we will implement has an
+[official mainnet deployment address](https://explorer.stacks.co/txid/0x80eb693e5e2a9928094792080b7f6d69d66ea9cc881bc465e8d9c5c621bd4d07?chain=mainnet)
+as detailed in the SIP document. Inside the `sip009-nft` project folder, we
+first specify a dependency on this trait, using Clarinet's `requirements`:
 
 ```bash
-clarinet contract new sip009-nft-trait
+clarinet requirements add SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait
 ```
 
-Copy the [SIP009 NFT trait](ch10-01-sip009-nft-standard.md#the-sip009-nft-trait)
-to `sip009-nft-trait.clar`. You can delete the generated test file
-`sip009-nft-trait_test.ts`.
+That command adds the following to `Clarinet.toml`:
+
+```toml
+[[project.requirements]]
+contract_id = "SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait"
+```
+
+Clarinet uses this information to download the contract from the network and
+takes care of deploying it to local or test networks for your testing.
 
 We then create the contract that will implement our custom NFT. Give it a flashy
 name if you like.
@@ -76,38 +84,17 @@ name if you like.
 clarinet contract new stacksies
 ```
 
-Finally, we specify that our custom token contracts depends on the trait
-contract by editing `Clarinet.toml`. Find the entry for your contract and add
-the name of the trait contract in the `depends_on` property.
-
-```toml
-[contracts.stacksies]
-path = "contracts/stacksies.clar"
-depends_on = ["sip009-nft-trait"]
-```
-
 ### Preparation work
 
 We have dealt with traits before, so we know that we should
 [explicitly assert conformity](ch09-02-implementing-traits.md#asserting-trait-conformance).
 
 ```Clarity,{"nonplayable":true}
-(impl-trait .sip009-nft-trait.sip009-nft-trait)
+(impl-trait 'SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait.nft-trait)
 ```
 
 Adding this line makes it impossible to deploy the contract if it does not fully
 implement the SIP009 trait.
-
-The trait also has an
-[official mainnet deployment address](https://explorer.stacks.co/txid/0x80eb693e5e2a9928094792080b7f6d69d66ea9cc881bc465e8d9c5c621bd4d07?chain=mainnet)
-as detailed in the SIP document. We can refer to it when we deploy but Clarinet
-cannot currently deal with such external references. We will add it as a comment
-for future use.
-
-```Clarity,{"nonplayable":true}
-;; SIP009 NFT trait on mainnet
-;; (impl-trait 'SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait.nft-trait)
-```
 
 Since the SIP requires the asset identifier type to be an unsigned integer, we
 add our NFT definition next.
@@ -128,10 +115,7 @@ Finally, we will add a constant for the contract deployer and two error codes.
 Here is everything put together:
 
 ```Clarity,{"nonplayable":true}
-(impl-trait .sip009-nft-trait.nft-trait)
-
-;; SIP009 NFT trait on mainnet
-;; (impl-trait 'SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait.nft-trait)
+(impl-trait 'SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait.nft-trait)
 
 (define-constant contract-owner tx-sender)
 (define-constant err-owner-only (err u100))

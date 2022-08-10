@@ -83,22 +83,3 @@ expressions.
 (impl-trait .multiplier-trait.multiplier)
 (impl-trait .divider-trait.divider)
 ```
-
-### Contract relations in Clarinet
-
-Testing whether your contract fully implements a trait by deploying it on-chain
-is not very economical. Clarinet has the ability to check trait implementations
-to make development easier and safer. Each contract has its own section inside
-the `Clarinet.toml` configuration file. The property `depends_on` contains a
-list of _contract names_—not principals—that a given contract depends on.
-
-```toml
-[contracts.math-utilities]
-path = "contracts/math-utilities.clar"
-depends_on = ["multiplier-trait", "divider-trait"]
-```
-
-Clarinet resolves the dependency graph based on the various `depends_on`
-properties to deploy the contracts in the right order. In the case above, the
-`math-utilities` contract depends on two contracts called `multiplier-trait` and
-`divider-trait`.

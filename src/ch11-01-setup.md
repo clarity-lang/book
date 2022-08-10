@@ -42,12 +42,12 @@ function that only the contract deployer can call.
 
 Let us now work on `tiny-market`. We will start off by importing the SIP traits.
 Be sure to check the naming and change them if you used different names. Do not
-forget to also edit the `depends_on` section in `Clarinet.toml` like you have
+forget to also add the corresponding `requirements` to the project like you have
 learned. We also define a constant for the contract owner.
 
 ```Clarity,{"nonplayable":true}
-(use-trait nft-trait .sip009-nft-trait.sip009-nft-trait)
-(use-trait ft-trait .sip010-ft-trait.sip010-ft-trait)
+(use-trait nft-trait 'SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait.nft-trait)
+(use-trait ft-trait 'SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard.sip010-trait)
 
 (define-constant contract-owner tx-sender)
 ```
