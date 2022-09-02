@@ -1,3 +1,5 @@
+![Clarity Smart Contract Language](assets/logo.svg)
+
 # Content
 
 [Clarity of Mind](title-page.md)

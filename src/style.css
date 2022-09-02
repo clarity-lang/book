@@ -95,6 +95,10 @@ hr{
 	outline: 800px solid rgba(0,0,0,0);
 }
 
+#summary img{
+	margin: 0;
+}
+
 #summary h1{
 	display: none;
 }
