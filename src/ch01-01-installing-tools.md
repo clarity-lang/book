@@ -86,4 +86,4 @@ your favourite Terminal emulator.
 clarinet 0.33.0
 ```
 
-More information about clarinet can be found here: [https://github.com/hirosystems/clarinet/blob/develop/README.md](https://github.com/hirosystems/clarinet/blob/develop/README.md)
+More information about Clarinet: [https://github.com/hirosystems/clarinet/blob/develop/README.md](https://github.com/hirosystems/clarinet/blob/develop/README.md)
