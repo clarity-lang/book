@@ -1,48 +1,89 @@
-## Installing the REPL and Clarinet
+## Installing Clarinet
 
-Both the REPL and Clarinet are experimental software. As such, installation
-procedures may be updated often. It is therefore recommended to consult the
-documentation of the tool in question in order to install it.
+### What is Clarinet?
+Clarinet is a Clarity runtime packaged as a command line tool, designed to facilitate smart contract understanding, development, testing and deployment. Clarinet consists of a Clarity REPL and a testing harness, which, when used together allow you to rapidly develop and test a Clarity smart contract, with the need to deploy the contract to a local devnet or testnet.
 
-### Clarity REPL
+Clarity is a decidable smart contract language that optimizes for predictability and security, designed for the Stacks blockchain. Smart contracts allow developers to encode essential business logic on a blockchain.
 
-A _read–eval–print loop_ (REPL) is an interactive computer programming
-environment that takes user inputs, evaluates them, and returns the result to
-the user. The Clarity REPL allows you to play around with the Clarity language
-and evaluate different expressions. It is very useful for quick tests or to
-verify the syntax of your code. The REPL is very versatile and can even be
-packaged up as a web component to be used in the browser (a so called
-[WASM binary](https://en.wikipedia.org/wiki/WebAssembly)). In fact, the
-interactive snippets found throughout this book are made possible because of it!
-If you are reading the book online you do not necessarily have to install the
-REPL, but it is definitely nice to have.
+### Install on macOS (Homebrew)
 
-Visit the official GitHub repository for the latest instructions on how to set
-up the Clarity REPL on your system: https://github.com/hirosystems/clarity-repl.
+```bash
+brew install clarinet
+```
 
-### Clarinet
+### Install on Windows
 
-Clarinet is a Clarity runtime packaged as a command line tool, designed to make
-it easy to write, test, and deploy Clarity smart contracts. Clarinet uses the
-Clarity REPL under the hood. It is self-contained and provides a built-in
-testing environment to write tests for your smart contracts. Clarinet is the
-tool that will be used throughout this book. It will be the basis for all
-upcoming example projects.
+The easiest way to install Clarinet on Windows is to use the MSI installer, that can be downloaded from the [releases page](https://github.com/hirosystems/clarinet/releases).
 
-There are two ways to get Clarinet. The first way is to download one of the
-_prebuilt binaries_ from the
-[GitHub releases page](https://github.com/hirosystems/clarinet/releases/). You
-will have to download the one particular to your platform, extract it, and then
-move it to a folder where your command line interface can find it:
+Clarinet is also available on Winget, the package manager that Microsoft started including in the latest Windows updates:
 
-- **macOS & Linux**: copy the `clarinet` binary to `/usr/local/bin`.
-- **Windows**: copy the `clarinet.exe` binary to `C:\Windows\System32`. (A
-  better solution is in the works.)
+```powershell
+winget install clarinet
+```
+
+### Install from a pre-built binary
+
+To install Clarinet from pre-built binaries, download the latest release from the [releases page](https://github.com/hirosystems/clarinet/releases).
+Unzip the binary, then copy it to a location that is already in your path, such as `/usr/local/bin`.
+
+```sh
+# note: you can change the v0.27.0 with version that are available in the releases page.
+wget -nv https://github.com/hirosystems/clarinet/releases/download/v0.27.0/clarinet-linux-x64-glibc.tar.gz -O clarinet-linux-x64.tar.gz
+tar -xf clarinet-linux-x64.tar.gz
+chmod +x ./clarinet
+mv ./clarinet /usr/local/bin
+```
+
+On MacOS, you may get security errors when trying to run the pre-compiled binary. You can resolve the security warning
+with with command
+
+```sh
+xattr -d com.apple.quarantine /path/to/downloaded/clarinet/binary
+```
+
+### Install from source using Cargo
+
+#### Prerequisites
+
+[Install Rust](https://www.rust-lang.org/tools/install) for access to `cargo`, the Rust package manager.
+
+On Debian and Ubuntu-based distributions, please install the following packages before building Clarinet.
+
+```bash
+sudo apt install build-essential pkg-config libssl-dev
+```
+
+#### Build Clarinet
+
+You can build Clarinet from source using Cargo with the following commands:
+
+```bash
+git clone https://github.com/hirosystems/clarinet.git --recursive
+cd clarinet
+cargo clarinet-install
+```
+
+By default, you will be in our development branch, `develop`, with code that has not been released yet. If you plan to submit any changes to the code, then this is the right branch for you. If you just want the latest stable version, switch to the main branch:
+
+```bash
+git checkout main
+```
+
+If you have previously checked out the source, ensure you have the latest code (including submodules) before building using:
+
+```
+git pull
+git submodule update --recursive
+```
+
+### Verify Clarinet
 
 You can verify Clarinet is installed properly by running `clarinet --version` in
 your favourite Terminal emulator.
 
 ```bash
 % clarinet --version
-clarinet 0.24.0
+clarinet 0.33.0
 ```
+
+More information about clarinet can be found here: [https://github.com/hirosystems/clarinet/blob/develop/README.md](https://github.com/hirosystems/clarinet/blob/develop/README.md)
