@@ -83,7 +83,7 @@ built-in functions that accept booleans:
 
 ### Principals
 
-A principal is a special type in Clarity and and represents a Stacks address on
+A principal is a special type in Clarity and represents a Stacks address on
 the blockchain. It is a unique identifier you can roughly equate to an email
 address or bank account number—although definitely not the same! You might have
 also heard the term _wallet address_ as well. Clarity admits two different kinds
