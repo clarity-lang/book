@@ -381,5 +381,5 @@ then it puts the project in a tough situation. While the most effective solution
 depends on the project, one should always consider the ramifications of key
 loss. A straightforward stategy is to implement a multi-principal ownership
 model as seen in the
-[multi-signature vault pratice project](ch08-03-multi-signature-vault.md) or to
+[multi-signature vault practice project](ch08-03-multi-signature-vault.md) or to
 make grant authorised access to a contract with DAO-like capabilities.
