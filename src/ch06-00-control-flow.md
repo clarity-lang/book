@@ -50,4 +50,4 @@ Another useful thing to understand with control flow functions is the
 difference between functions that end in an exclamation point (such as `unwrap!`),
 and those that do not (such as `unwrap-panic`). Those that end in an exclamation 
 point allow for arbitrary early returns from a function. Those that do not 
-terminates execution altogether and throws a runtime error. 
+terminate execution altogether and throw a runtime error. 
