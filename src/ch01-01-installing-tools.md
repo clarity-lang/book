@@ -10,7 +10,7 @@ This process relies on the macOS package manager called [Homebrew](https://brew.
 
 To get started, launch your [Terminal](https://support.apple.com/en-ph/guide/terminal/welcome/mac) (/Applications/Utilities/Terminal) application. Terminal is a versatile command line system that comes with every Mac computer.
 
-If you don't already have [XCode](https://developer.apple.com/xcode/) installed, it's best to first install the command line tools as these will be used by homebrew:
+If you do not already have [XCode](https://developer.apple.com/xcode/) installed, it's best to first install the command line tools as these will be used by homebrew:
 ```bash
 xcode-select --install
 ```
