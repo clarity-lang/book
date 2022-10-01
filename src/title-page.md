@@ -2,7 +2,7 @@
 
 Writing productive smart contracts that are predictable.
 
-By _Marvin Janssen_ with contributions of _lnow_ and _Mike Cohen_.
+By _Marvin Janssen_ with contributions of _lnow_, _Mike Cohen_ and _Albert Catama_.
 
 This book is free and open source, available online at
 https://book.clarity-lang.org. It is licensed under a _Creative Commons

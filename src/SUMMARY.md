@@ -1,3 +1,5 @@
+![Clarity Smart Contract Language](assets/logo.svg)
+
 # Content
 
 [Clarity of Mind](title-page.md)
@@ -5,7 +7,7 @@
 [Introduction](ch00-00-introduction.md)
 
 - [Getting started](ch01-00-getting-started.md)
-  - [Installing the REPL and Clarinet](ch01-01-installing-tools.md)
+  - [Installing Clarinet](ch01-01-installing-tools.md)
   - [Clarity basics](ch01-02-clarity-basics.md)
 - [Types](ch02-00-types.md)
   - [Primitives](ch02-01-primitive-types.md)
