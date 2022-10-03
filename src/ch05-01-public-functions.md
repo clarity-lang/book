@@ -4,7 +4,7 @@ Public functions are callable from the outside by both standard principals and
 contract principals. Contracts that feature any interactivity will need at least
 one public function. The fact of them being callable does not imply that the
 _underlying functionality_ is public. The developer can include assertions to
-make sure that only specific [contract callers](ch-03-00-keywords.md) or inputs
+make sure that only specific [contract callers](ch03-00-keywords.md) or inputs
 are valid.
 
 Public functions _**must**_ return a
