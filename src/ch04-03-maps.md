@@ -64,7 +64,7 @@ member, consider using the member type as the map key type directly.
 ### Set and insert
 
 The `map-set` function will overwrite existing values whilst `map-insert` will
-fail if the specified key already exists. Entries may also be deleted using
+do nothing and return `false` if the specified key already exists. Entries may also be deleted using
 `map-delete`.
 
 ```Clarity
@@ -73,7 +73,7 @@ fail if the specified key already exists. Entries may also be deleted using
 ;; Insert a value.
 (map-insert scores tx-sender u100)
 
-;; This second insert will fail because the key already exists.
+;; This second insert will do nothing because the key already exists.
 (map-insert scores tx-sender u200)
 
 ;; The score for tx-sender will be u100.
