@@ -16,7 +16,7 @@ Concepts are gradually introduced in a logical and steady pace. Nonetheless, the
 chapters lend themselves rather well to being read in a different order. More
 experienced developers might get the most benefit by jumping to the chapters
 that interest them most. **If you like to learn by example, then you should go
-straight to the [chapter on Using Clarinet](ch-07-00-using-clarinet.md).**
+straight to the [chapter on Using Clarinet](ch07-00-using-clarinet.md).**
 
 It is assumed that you have a basic understanding of programming and the
 underlying logical concepts. The first chapter covers the general syntax of
@@ -163,7 +163,7 @@ token transfer can fail silently if the developer forgets to check the result.
 In Clarity it is not possible to ignore errors, although that obviously does
 prevent buggy error handling on behalf of the developer. Responses and error
 handling are covered extensively in the chapters on
-[functions](ch-05-00-functions.md) and [control flow](ch06-00-control-flow.md).
+[functions](ch05-00-functions.md) and [control flow](ch06-00-control-flow.md).
 
 ### Composition over inheritance
 
