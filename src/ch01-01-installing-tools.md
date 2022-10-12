@@ -104,7 +104,7 @@ your favourite Terminal emulator.
 
 ```bash
 % clarinet --version
-clarinet 0.33.0
+clarinet-cli 1.0.2
 ```
 
 More information about Clarinet: [https://github.com/hirosystems/clarinet/blob/develop/README.md](https://github.com/hirosystems/clarinet/blob/develop/README.md)
