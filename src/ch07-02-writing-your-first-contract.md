@@ -3,6 +3,8 @@
 Now that we have the project setup out of the way, let us jump into writing our
 first contract.
 
+Open up the `counter.clar` file inside the `contracts` directory.
+
 ### Defining the data store
 
 A [map](ch04-03-maps.md) will be used to store the individual counter values.
