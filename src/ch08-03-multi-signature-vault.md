@@ -242,6 +242,9 @@ function to initialise the contract. The function can then be called at the
 beginning of various tests to take care of calling `start` and making an initial
 STX token deposit by calling `deposit`.
 
+Make sure to change the `contractName` below to what you labeled your contact
+name to.
+
 ```typescript
 const contractName = "multisig-vault";
 
