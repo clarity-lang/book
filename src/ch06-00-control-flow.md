@@ -45,3 +45,9 @@ understand! Control flow functions are absolutely necessary to produce legible
 code once your contracts become more complex. They allow you to create
 short-circuits that immediately return a value from a function, ending execution
 early and thus skipping over any expressions that might have come after.
+
+Another useful thing to understand with control flow functions is the 
+difference between functions that end in an exclamation point (such as `unwrap!`),
+and those that do not (such as `unwrap-panic`). Those that end in an exclamation 
+point allow for arbitrary early returns from a function. Those that do not 
+terminate execution altogether and throw a runtime error. 
