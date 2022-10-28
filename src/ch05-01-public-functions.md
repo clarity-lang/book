@@ -15,7 +15,7 @@ changes such as updating variables or transferring tokens will _**only**_ be
 committed to the chain if the contract call that triggered these changes returns
 an `ok`.
 
-The effects of of returning an `ok` or an `err` are illustrated by the example
+The effects of returning an `ok` or an `err` are illustrated by the example
 below. It is a basic function that takes an unsigned integer as an input and
 will return an `ok` if it is even or an `err` if it is uneven. It will also
 increment a variable called `even-values` at the start of the function. To check
