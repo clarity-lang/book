@@ -5,8 +5,8 @@ parameter followed by a series of function signatures in short form. The
 function signatures looks a bit different from those defining a
 [custom function](ch05-00-functions.md) in that they only contain the name,
 input types, and output types. Function argument names are not included because
-they not important in terms of functionality. Think about it, when performing a
-contract call, you pass a list of parameters and never specify the argument
+they are not important in terms of functionality. Think about it, when performing 
+a contract call, you pass a list of parameters and never specify the argument
 names themselves. Only the order and types are important.
 
 The general form for defining a trait looks like this:
