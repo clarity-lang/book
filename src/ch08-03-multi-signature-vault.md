@@ -77,7 +77,7 @@ principal of the member issuing the vote and the principal being voted for.
 
 For a simple voting contract, storing the members in a list is acceptable. It
 also allows us to practice iterating over a list in a few interesting ways.
-However, it is important to note that such member lists are not be sufficient
+However, it is important to note that such member lists are not sufficient
 for larger projects as they can quickly become expensive to use. The chapter on
 best practices covers some uses and possible misuses of lists.
 
