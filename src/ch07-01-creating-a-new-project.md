@@ -78,7 +78,7 @@ The files found in the `settings` directory are used for deployment:
 
 - `Devnet.toml` contains configuration that is used when running tests and in
   console mode.
-- `Testnet.toml` is a template for deploying on a tesnet chain.
+- `Testnet.toml` is a template for deploying on a testnet chain.
 - `Mainnet.toml` is a template for deploying on a mainnet chain.
 
 We will take a closer look at them later. Their contents are not important for
@@ -86,7 +86,7 @@ our project but it is good to know what they are used for.
 
 Here is what the end result looks like. You can see your project files on the
 left, the terminal window on the bottom right, and your editor on the top right.
-*Please note that the directories shown in the image may differ with the current
-version.*
+_Please note that the directories shown in the image may differ with the current
+version._
 
 ![Visual Studio Code interface](assets/ch07/1.png)

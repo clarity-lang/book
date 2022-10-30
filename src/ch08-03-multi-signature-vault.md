@@ -242,8 +242,9 @@ function to initialise the contract. The function can then be called at the
 beginning of various tests to take care of calling `start` and making an initial
 STX token deposit by calling `deposit`.
 
-Make sure to change the `contractName` below to what you labeled your contact
-name to.
+In our example, we named the contract `multisig-vault`. Make sure to change the
+`contractName` variable below to your contract name if you gave your contract
+a different name.
 
 ```typescript
 const contractName = "multisig-vault";
@@ -266,33 +267,36 @@ type InitContractOptions = {
   stxVaultAmount?: number;
 };
 
-function initContract(
-  {
-    chain,
-    accounts,
-    members = defaultMembers,
-    votesRequired = defaultVotesRequired,
-    stxVaultAmount = defaultStxVaultAmount,
-  }: InitContractOptions,
-) {
+function initContract({
+  chain,
+  accounts,
+  members = defaultMembers,
+  votesRequired = defaultVotesRequired,
+  stxVaultAmount = defaultStxVaultAmount,
+}: InitContractOptions) {
   const deployer = accounts.get("deployer")!;
   const contractPrincipal = `${deployer.address}.${contractName}`;
   const memberAccounts = members.map((name) => accounts.get(name)!);
-  const nonMemberAccounts = Array.from(accounts.keys()).filter((key) =>
-    !members.includes(key)
-  ).map((name) => accounts.get(name)!);
+  const nonMemberAccounts = Array.from(accounts.keys())
+    .filter((key) => !members.includes(key))
+    .map((name) => accounts.get(name)!);
   const startBlock = chain.mineBlock([
-    Tx.contractCall(contractName, "start", [
-      types.list(
-        memberAccounts.map((account) => types.principal(account.address)),
-      ),
-      types.uint(votesRequired),
-    ], deployer.address),
+    Tx.contractCall(
+      contractName,
+      "start",
+      [
+        types.list(
+          memberAccounts.map((account) => types.principal(account.address))
+        ),
+        types.uint(votesRequired),
+      ],
+      deployer.address
+    ),
     Tx.contractCall(
       contractName,
       "deposit",
       [types.uint(stxVaultAmount)],
-      deployer.address,
+      deployer.address
     ),
   ]);
   return {
@@ -325,10 +329,12 @@ Clarinet.test({
       types.principal(memberB.address),
     ]);
     const block = chain.mineBlock([
-      Tx.contractCall(contractName, "start", [
-        memberList,
-        types.uint(votesRequired),
-      ], deployer.address),
+      Tx.contractCall(
+        contractName,
+        "start",
+        [memberList, types.uint(votesRequired)],
+        deployer.address
+      ),
     ]);
     block.receipts[0].result.expectOk().expectBool(true);
   },
@@ -345,10 +351,12 @@ Clarinet.test({
       types.principal(memberB.address),
     ]);
     const block = chain.mineBlock([
-      Tx.contractCall(contractName, "start", [
-        memberList,
-        types.uint(votesRequired),
-      ], memberB.address),
+      Tx.contractCall(
+        contractName,
+        "start",
+        [memberList, types.uint(votesRequired)],
+        memberB.address
+      ),
     ]);
     block.receipts[0].result.expectErr().expectUint(100);
   },
@@ -365,14 +373,18 @@ Clarinet.test({
       types.principal(memberB.address),
     ]);
     const block = chain.mineBlock([
-      Tx.contractCall(contractName, "start", [
-        memberList,
-        types.uint(votesRequired),
-      ], deployer.address),
-      Tx.contractCall(contractName, "start", [
-        memberList,
-        types.uint(votesRequired),
-      ], deployer.address),
+      Tx.contractCall(
+        contractName,
+        "start",
+        [memberList, types.uint(votesRequired)],
+        deployer.address
+      ),
+      Tx.contractCall(
+        contractName,
+        "start",
+        [memberList, types.uint(votesRequired)],
+        deployer.address
+      ),
     ]);
     block.receipts[0].result.expectOk().expectBool(true);
     block.receipts[1].result.expectErr().expectUint(101);
@@ -403,10 +415,12 @@ Clarinet.test({
   async fn(chain: Chain, accounts: Map<string, Account>) {
     const { memberAccounts, deployer } = initContract({ chain, accounts });
     const votes = memberAccounts.map((account) =>
-      Tx.contractCall(contractName, "vote", [
-        types.principal(deployer.address),
-        types.bool(true),
-      ], account.address)
+      Tx.contractCall(
+        contractName,
+        "vote",
+        [types.principal(deployer.address), types.bool(true)],
+        account.address
+      )
     );
     const block = chain.mineBlock(votes);
     block.receipts.map((receipt) => receipt.result.expectOk().expectBool(true));
@@ -418,10 +432,12 @@ Clarinet.test({
   async fn(chain: Chain, accounts: Map<string, Account>) {
     const { nonMemberAccounts, deployer } = initContract({ chain, accounts });
     const votes = nonMemberAccounts.map((account) =>
-      Tx.contractCall(contractName, "vote", [
-        types.principal(deployer.address),
-        types.bool(true),
-      ], account.address)
+      Tx.contractCall(
+        contractName,
+        "vote",
+        [types.principal(deployer.address), types.bool(true)],
+        account.address
+      )
     );
     const block = chain.mineBlock(votes);
     block.receipts.map((receipt) => receipt.result.expectErr().expectUint(103));
@@ -442,15 +458,19 @@ Clarinet.test({
     const [memberA] = memberAccounts;
     const vote = types.bool(true);
     chain.mineBlock([
-      Tx.contractCall(contractName, "vote", [
-        types.principal(deployer.address),
-        vote,
-      ], memberA.address),
+      Tx.contractCall(
+        contractName,
+        "vote",
+        [types.principal(deployer.address), vote],
+        memberA.address
+      ),
     ]);
-    const receipt = chain.callReadOnlyFn(contractName, "get-vote", [
-      types.principal(memberA.address),
-      types.principal(deployer.address),
-    ], memberA.address);
+    const receipt = chain.callReadOnlyFn(
+      contractName,
+      "get-vote",
+      [types.principal(memberA.address), types.principal(deployer.address)],
+      memberA.address
+    );
     receipt.result.expectBool(true);
   },
 });
@@ -464,8 +484,7 @@ votes for the `tx-sender` if the threshold is met. Otherwise it returns an
 
 ```typescript
 Clarinet.test({
-  name:
-    "Principal that meets the vote threshold can withdraw the vault balance",
+  name: "Principal that meets the vote threshold can withdraw the vault balance",
   async fn(chain: Chain, accounts: Map<string, Account>) {
     const { contractPrincipal, memberAccounts } = initContract({
       chain,
@@ -473,10 +492,12 @@ Clarinet.test({
     });
     const recipient = memberAccounts.shift()!;
     const votes = memberAccounts.map((account) =>
-      Tx.contractCall(contractName, "vote", [
-        types.principal(recipient.address),
-        types.bool(true),
-      ], account.address)
+      Tx.contractCall(
+        contractName,
+        "vote",
+        [types.principal(recipient.address), types.bool(true)],
+        account.address
+      )
     );
     chain.mineBlock(votes);
     const block = chain.mineBlock([
@@ -486,14 +507,13 @@ Clarinet.test({
     block.receipts[0].events.expectSTXTransferEvent(
       defaultStxVaultAmount,
       contractPrincipal,
-      recipient.address,
+      recipient.address
     );
   },
 });
 
 Clarinet.test({
-  name:
-    "Principals that do not meet the vote threshold cannot withdraw the vault balance",
+  name: "Principals that do not meet the vote threshold cannot withdraw the vault balance",
   async fn(chain: Chain, accounts: Map<string, Account>) {
     const { memberAccounts, nonMemberAccounts } = initContract({
       chain,
@@ -501,13 +521,16 @@ Clarinet.test({
     });
     const recipient = memberAccounts.shift()!;
     const [nonMemberA] = nonMemberAccounts;
-    const votes = memberAccounts.slice(0, defaultVotesRequired - 1).map(
-      (account) =>
-        Tx.contractCall(contractName, "vote", [
-          types.principal(recipient.address),
-          types.bool(true),
-        ], account.address),
-    );
+    const votes = memberAccounts
+      .slice(0, defaultVotesRequired - 1)
+      .map((account) =>
+        Tx.contractCall(
+          contractName,
+          "vote",
+          [types.principal(recipient.address), types.bool(true)],
+          account.address
+        )
+      );
     chain.mineBlock(votes);
     const block = chain.mineBlock([
       Tx.contractCall(contractName, "withdraw", [], recipient.address),
@@ -526,30 +549,33 @@ to claim the balance.
 
 ```typescript
 Clarinet.test({
-  name:
-    "Members can change votes at-will, thus making an eligible recipient uneligible again",
+  name: "Members can change votes at-will, thus making an eligible recipient uneligible again",
   async fn(chain: Chain, accounts: Map<string, Account>) {
     const { memberAccounts } = initContract({ chain, accounts });
     const recipient = memberAccounts.shift()!;
     const votes = memberAccounts.map((account) =>
-      Tx.contractCall(contractName, "vote", [
-        types.principal(recipient.address),
-        types.bool(true),
-      ], account.address)
+      Tx.contractCall(
+        contractName,
+        "vote",
+        [types.principal(recipient.address), types.bool(true)],
+        account.address
+      )
     );
     chain.mineBlock(votes);
     const receipt = chain.callReadOnlyFn(
       contractName,
       "tally-votes",
       [],
-      recipient.address,
+      recipient.address
     );
     receipt.result.expectUint(votes.length);
     const block = chain.mineBlock([
-      Tx.contractCall(contractName, "vote", [
-        types.principal(recipient.address),
-        types.bool(false),
-      ], memberAccounts[0].address),
+      Tx.contractCall(
+        contractName,
+        "vote",
+        [types.principal(recipient.address), types.bool(false)],
+        memberAccounts[0].address
+      ),
       Tx.contractCall(contractName, "withdraw", [], recipient.address),
     ]);
     block.receipts[0].result.expectOk().expectBool(true);
