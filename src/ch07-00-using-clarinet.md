@@ -16,7 +16,7 @@ The chapters focusing on projects contain a good amount of screenshots and step
 by step explanations to make it easy to follow for beginning developers and
 people who are new to using Visual Studio Code itself. Full project source files
 are also made available on GitHub. The link can be found at the end of each
-chapter and in the [links and resources](#TODO) section.
+chapter and in the [links and resources](ch14-00-links-and-resources.md) section.
 
 From this point, it is assumed that you already successfully installed Clarinet
 and that it is available in your system PATH (that is to say, typing `clarinet`
@@ -28,5 +28,5 @@ emulator.
 
 ```bash
 % clarinet --version
-clarinet 0.14.1
+clarinet-cli 1.0.2
 ```
