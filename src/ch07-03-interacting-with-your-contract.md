@@ -118,3 +118,12 @@ changing the sender a couple of times and by specifying principals for
 
 Congratulations, you just made and manually tested your first Clarity smart
 contract.
+
+## A word on a contract's *context*
+
+In the previous section we describe changing the contract's context. The context
+refers to the current state of the contract runtime environment during execution,
+including the value of `tx-sender` and the local binding of symbols to values in
+the scope of a `let` expression. This information is important because it
+determines how the contract will behave and what actions it will take as it is
+executed. 
