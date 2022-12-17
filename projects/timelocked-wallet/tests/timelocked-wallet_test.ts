@@ -4,7 +4,7 @@ import { assertEquals } from 'https://deno.land/std@0.125.0/testing/asserts.ts';
 
 Clarinet.test({
 	name: "Allows the contract owner to lock an amount",
-	async fn(chain: Chain, accounts: Map<string, Account>) {
+	fn(chain: Chain, accounts: Map<string, Account>) {
 		const deployer = accounts.get('deployer')!;
 		const beneficiary = accounts.get('wallet_1')!;
 		const amount = 10;
@@ -21,7 +21,7 @@ Clarinet.test({
 
 Clarinet.test({
 	name: "Does not allow anyone else to lock an amount",
-	async fn(chain: Chain, accounts: Map<string, Account>) {
+	fn(chain: Chain, accounts: Map<string, Account>) {
 		const accountA = accounts.get('wallet_1')!;
 		const beneficiary = accounts.get('wallet_2')!;
 		const block = chain.mineBlock([
@@ -35,7 +35,7 @@ Clarinet.test({
 
 Clarinet.test({
 	name: "Cannot lock more than once",
-	async fn(chain: Chain, accounts: Map<string, Account>) {
+	fn(chain: Chain, accounts: Map<string, Account>) {
 		const deployer = accounts.get('deployer')!;
 		const beneficiary = accounts.get('wallet_1')!;
 		const amount = 10;
@@ -58,7 +58,7 @@ Clarinet.test({
 
 Clarinet.test({
 	name: "Unlock height cannot be in the past",
-	async fn(chain: Chain, accounts: Map<string, Account>) {
+	fn(chain: Chain, accounts: Map<string, Account>) {
 		const deployer = accounts.get('deployer')!;
 		const beneficiary = accounts.get('wallet_1')!;
 		const targetBlockHeight = 10;
@@ -81,7 +81,7 @@ Clarinet.test({
 
 Clarinet.test({
 	name: "Allows the beneficiary to bestow the right to claim to someone else",
-	async fn(chain: Chain, accounts: Map<string, Account>) {
+	fn(chain: Chain, accounts: Map<string, Account>) {
 		const deployer = accounts.get('deployer')!;
 		const beneficiary = accounts.get('wallet_1')!;
 		const newBeneficiary = accounts.get('wallet_2')!;
@@ -97,7 +97,7 @@ Clarinet.test({
 
 Clarinet.test({
 	name: "Does not allow anyone else to bestow the right to claim to someone else (not even the contract owner)",
-	async fn(chain: Chain, accounts: Map<string, Account>) {
+	fn(chain: Chain, accounts: Map<string, Account>) {
 		const deployer = accounts.get('deployer')!;
 		const beneficiary = accounts.get('wallet_1')!;
 		const accountA = accounts.get('wallet_3')!;
@@ -114,7 +114,7 @@ Clarinet.test({
 
 Clarinet.test({
 	name: "Allows the beneficiary to claim the balance when the block-height is reached",
-	async fn(chain: Chain, accounts: Map<string, Account>) {
+	fn(chain: Chain, accounts: Map<string, Account>) {
 		const deployer = accounts.get('deployer')!;
 		const beneficiary = accounts.get('wallet_1')!;
 		const targetBlockHeight = 10;
@@ -138,7 +138,7 @@ Clarinet.test({
 
 Clarinet.test({
 	name: "Does not allow the beneficiary to claim the balance before the block-height is reached",
-	async fn(chain: Chain, accounts: Map<string, Account>) {
+	fn(chain: Chain, accounts: Map<string, Account>) {
 		const deployer = accounts.get('deployer')!;
 		const beneficiary = accounts.get('wallet_1')!;
 		const targetBlockHeight = 10;
@@ -162,7 +162,7 @@ Clarinet.test({
 
 Clarinet.test({
 	name: "Does not allow anyone else to claim the balance when the block-height is reached",
-	async fn(chain: Chain, accounts: Map<string, Account>) {
+	fn(chain: Chain, accounts: Map<string, Account>) {
 		const deployer = accounts.get('deployer')!;
 		const beneficiary = accounts.get('wallet_1')!;
 		const other = accounts.get('wallet_2')!;
