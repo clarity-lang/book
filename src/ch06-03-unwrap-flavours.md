@@ -5,7 +5,7 @@ in a slightly different manner.
 
 `unwrap!` takes an `optional` or `response` as the first input and a throw value
 as the second input. It follows the same unwrapping behaviour of `try!` , but
-instead of propagating the the `none` or the `err` it will return the the throw
+instead of propagating the `none` or the `err` it will return the the throw
 value instead.
 
 ```Clarity
