@@ -38,18 +38,24 @@
 	(if (get-vote member tx-sender) (+ accumulator u1) accumulator)
 )
 
-(define-read-only (tally-votes)
+(define-read-only (total-votes)
 	(fold tally (var-get members) u0)
+)
+
+;; TODO: Add function for counting the votes for a specific member
+(define-read-only (tally-votes (member principal))
+
 )
 
 (define-public (withdraw)
 	(let
 		(
 			(recipient tx-sender)
-			(total-votes (tally-votes))
+			(total-votes (total-votes)) 
+			;; TODO: we need to count the number of votes for tx-sender and check that he/she/they have received the most votes.
 		)
 		(asserts! (>= total-votes (var-get votes-required)) err-votes-required-not-met)
-		(try! (as-contract (stx-transfer? (stx-get-balance tx-sender) tx-sender recipient)))
+		(try! (as-contract (stx-transfer? (stx-get-balance tx-sender) tx-sender recipient))) ;; FIXME: the money should be sent from the `contract-owner`
 		(ok total-votes)
 	)
 )
