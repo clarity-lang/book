@@ -1,5 +1,6 @@
 ;; multisig-vault
 ;; A simple multisig vault that allows members to vote on who should receive the STX contents.
+;; A member that meets the given votes-required threshold can withdraw funds from the contract.
 
 (define-constant contract-owner tx-sender)
 (define-constant err-owner-only (err u100))
@@ -38,15 +39,25 @@
 	(if (get-vote member tx-sender) (+ accumulator u1) accumulator)
 )
 
-(define-read-only (total-votes)
+(define-read-only (tally-votes)
 	(fold tally (var-get members) u0)
 )
 
-;; TODO: Add function for counting the votes for a specific member
-(define-read-only (tally-votes (member principal))
-
+(define-public (withdraw)
+	(let
+		(
+			(recipient tx-sender)
+			(total-votes (tally-votes))
+		)
+		(asserts! (>= total-votes (var-get votes-required)) err-votes-required-not-met)
+		(try! (as-contract (stx-transfer? (stx-get-balance tx-sender) tx-sender recipient)))
+		(ok total-votes)
+	)
 )
 
+(define-public (deposit (amount uint))
+	(stx-transfer? amount tx-sender (as-contract tx-sender))
+)
 (define-public (withdraw)
 	(let
 		(
