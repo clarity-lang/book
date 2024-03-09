@@ -55,9 +55,10 @@ learned. We also define a constant for the contract owner.
 We will then think about the various error states that exist in our marketplace.
 The act of listing an NFT may fail under a number of circumstances; namely, the
 expiry block height is in the past, or the listing price is zero (we will not
-allow free listings). There is also the consideration of the using trying to
-list the NFT not actually owning it, but this will be handled by the NFT
-contract itself. You may remember that the built-in NFT functions fail with an
+allow free listings). Additionally, there is the possibility that a user may try 
+to list an NFT for sale without actually owning it. However, this issue will 
+be addressed by the NFT contract's built-in safeguards. You may remember that 
+the built-in NFT functions fail with an
 error code if the NFT does not exist or if it is not owned by `tx-sender`. We
 will simply propagate those errors using
 [control flow functions](ch06-00-control-flow.md). We therefore only define two
