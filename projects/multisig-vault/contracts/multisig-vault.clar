@@ -1,5 +1,6 @@
 ;; multisig-vault
 ;; A simple multisig vault that allows members to vote on who should receive the STX contents.
+;; A member that meets the given votes-required threshold can withdraw funds from the contract.
 
 (define-constant contract-owner tx-sender)
 (define-constant err-owner-only (err u100))
