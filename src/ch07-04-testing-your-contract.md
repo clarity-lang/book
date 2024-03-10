@@ -22,7 +22,7 @@ you are using, it should have added some imports and template code to the test
 file. You may remove the template code but make sure you leave the `import`
 statements intact.
 
-Tests are defined using the `it()` function. They have a name, which is
+Tests are defined using the `test()` function. They have a name, which is
 used as a description, and a callback function that is executed on test. Before
 each test commences, Clarinet will instantiate a fresh local chain and then run
 the function. The function should run one or more contract calls against the
@@ -56,7 +56,7 @@ We will therefore start by writing a test for the default behaviour of
 `count-up` before.
 
 ```typescript
-it('get-count returns u0 for principals that never called count-up before', () => {
+test('get-count returns u0 for principals that never called count-up before', () => {
   // Get the deployer account.
   const deployer = accounts.get("deployer")!;
 
@@ -92,7 +92,7 @@ conditions are always the same. We therefore know that the first `count-up` call
 will always result in the counter for that `tx-sender` to be `u1`.
 
 ```typescript
-it('count-up counts up for the tx-sender', () => {
+test('count-up counts up for the tx-sender', () => {
   // Get the deployer account.
   const deployer = accounts.get("deployer")!;
 
@@ -128,7 +128,7 @@ contract, it makes sense to add another test that explicitly tests the
 multiplayer aspect of our contract.
 
 ```typescript
-it('counters are specific to the tx-sender', () => {
+test('counters are specific to the tx-sender', () => {
   // Get some accounts.
   const deployer = accounts.get("deployer")!;
   const wallet1 = accounts.get("wallet_1")!;

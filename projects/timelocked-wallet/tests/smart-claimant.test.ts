@@ -1,9 +1,9 @@
 import { Cl } from '@stacks/transactions';
-import { expect, it } from "vitest";
+import { expect, test } from "vitest";
 
 const accounts = simnet.getAccounts();
 
-it('Disburses tokens once it can claim the time-locked wallet balance', () => {
+test('Disburses tokens once it can claim the time-locked wallet balance', () => {
 	const deployer = accounts.get("deployer")!;
 	const beneficiary = `${deployer}.smart-claimant`;
 

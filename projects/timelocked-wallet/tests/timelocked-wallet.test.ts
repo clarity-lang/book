@@ -1,10 +1,10 @@
 import { Cl } from '@stacks/transactions';
-import { describe, expect, it } from "vitest";
+import { describe, expect, test } from "vitest";
 
 const accounts = simnet.getAccounts();
 
 describe('Testing lock', () => {
-  it('Allows the contract owner to lock an amount', () => {
+  test('Allows the contract owner to lock an amount', () => {
     const deployer = accounts.get("deployer")!;
     const beneficiary = accounts.get("wallet_1")!;
     const amount = 10;
@@ -29,7 +29,7 @@ describe('Testing lock', () => {
     });
   });
 
-  it('Does not allow anyone else to lock an amount', () => {
+  test('Does not allow anyone else to lock an amount', () => {
     const accountA = accounts.get("wallet_1")!;
     const beneficiary = accounts.get("wallet_2")!;
 
@@ -43,7 +43,7 @@ describe('Testing lock', () => {
     expect(lockResponse.result).toBeErr(Cl.uint(100));
   });
 
-  it('Cannot lock more than once', () => {
+  test('Cannot lock more than once', () => {
     const deployer = accounts.get("deployer")!;
     const beneficiary = accounts.get("wallet_1")!;
     const unlockAt = 10;
@@ -78,7 +78,7 @@ describe('Testing lock', () => {
     expect(lockResponse2.events).toHaveLength(0);
   });
 
-  it('Unlock height cannot be in the past', () => {
+  test('Unlock height cannot be in the past', () => {
     const deployer = accounts.get("deployer")!;
     const beneficiary = accounts.get("wallet_1")!;
     const amount = 10;
@@ -102,7 +102,7 @@ describe('Testing lock', () => {
 });
 
 describe('Testing bestow', () => {
-  it('Allows the beneficiary to bestow the right to claim to someone else', () => {
+  test('Allows the beneficiary to bestow the right to claim to someone else', () => {
     const deployer = accounts.get("deployer")!;
     const beneficiary = accounts.get("wallet_1")!;
     const newBeneficiary = accounts.get("wallet_2")!;
@@ -122,7 +122,7 @@ describe('Testing bestow', () => {
     expect(bestowResponse.result).toBeOk(Cl.bool(true));
   });
 
-  it('Does not allow anyone else to bestow the right to claim to someone else (not even the contract owner)', () => {
+  test('Does not allow anyone else to bestow the right to claim to someone else (not even the contract owner)', () => {
     const deployer = accounts.get("deployer")!;
     const beneficiary = accounts.get("wallet_1")!;
     const accountA = accounts.get("wallet_2")!;
@@ -151,7 +151,7 @@ describe('Testing bestow', () => {
 });
 
 describe('Testing claim', () => {
-  it('Allows the beneficiary to claim the balance when the block-height is reached', () => {
+  test('Allows the beneficiary to claim the balance when the block-height is reached', () => {
     const deployer = accounts.get("deployer")!;
     const beneficiary = accounts.get("wallet_1")!;
     const targetBlockHeight = 10;
@@ -178,7 +178,7 @@ describe('Testing claim', () => {
     });
   });
 
-  it('Does not allow the beneficiary to claim the balance before the block-height is reached', () => {
+  test('Does not allow the beneficiary to claim the balance before the block-height is reached', () => {
     const deployer = accounts.get("deployer")!;
     const beneficiary = accounts.get("wallet_1")!;
     const targetBlockHeight = 10;
@@ -200,7 +200,7 @@ describe('Testing claim', () => {
     expect(claimResponse.events).toHaveLength(0);
   });
 
-  it('Does not allow anyone else to claim the balance when the block-height is reached', () => {
+  test('Does not allow anyone else to claim the balance when the block-height is reached', () => {
     const deployer = accounts.get("deployer")!;
     const beneficiary = accounts.get("wallet_1")!;
     const other = accounts.get("wallet_2")!;

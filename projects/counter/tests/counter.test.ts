@@ -1,9 +1,9 @@
 import { Cl } from '@stacks/transactions';
-import { expect, it } from "vitest";
+import { expect, test } from "vitest";
 
 const accounts = simnet.getAccounts();
 
-it('get-count returns u0 for principals that never called count-up before', () => {
+test('get-count returns u0 for principals that never called count-up before', () => {
   // Get the deployer account.
   const deployer = accounts.get("deployer")!;
 
@@ -21,7 +21,7 @@ it('get-count returns u0 for principals that never called count-up before', () =
   expect(incrementResponse.result).toBeUint(0);
 });
 
-it('count-up counts up for the tx-sender', () => {
+test('count-up counts up for the tx-sender', () => {
   // Get the deployer account.
   const deployer = accounts.get("deployer")!;
 
@@ -43,7 +43,7 @@ it('count-up counts up for the tx-sender', () => {
   expect(getCountResponse.result).toBeUint(1);
 });
 
-it('counters are specific to the tx-sender', () => {
+test('counters are specific to the tx-sender', () => {
   // Get some accounts.
   const deployer = accounts.get("deployer")!;
   const wallet1 = accounts.get("wallet_1")!;
