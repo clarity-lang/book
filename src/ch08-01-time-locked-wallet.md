@@ -258,7 +258,7 @@ transfer event actually happened. Those will be used to keep the unit tests
 succinct.
 
 The test file for a contract is always found in the `tests` folder. It is named
-after the contract: `timelocked-wallet_test.ts`. Clear the file but be sure to
+after the contract: `timelocked-wallet.test.ts`. Clear the file but be sure to
 keep the `import` statement at the top.
 
 ### Testing lock
@@ -266,109 +266,102 @@ keep the `import` statement at the top.
 We start by writing the four tests that cover the different cases of `lock`.
 
 ```typescript
-Clarinet.test({
-  name: "Allows the contract owner to lock an amount",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
+describe('Testing lock', () => {
+  it('Allows the contract owner to lock an amount', () => {
     const deployer = accounts.get("deployer")!;
     const beneficiary = accounts.get("wallet_1")!;
     const amount = 10;
-    const block = chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(10),
-        types.uint(amount),
-      ], deployer.address),
-    ]);
+
+    const lockResponse = simnet.callPublicFn(
+      'timelocked-wallet', 'lock',
+      [Cl.principal(beneficiary), Cl.uint(10), Cl.uint(amount)],
+      deployer
+    );
 
     // The lock should be successful.
-    block.receipts[0].result.expectOk().expectBool(true);
-    // There should be a STX transfer of the amount specified.
-    block.receipts[0].events.expectSTXTransferEvent(
-      amount,
-      deployer.address,
-      `${deployer.address}.timelocked-wallet`,
-    );
-  },
-});
+    expect(lockResponse.result).toBeOk(Cl.bool(true));
 
-Clarinet.test({
-  name: "Does not allow anyone else to lock an amount",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
+    // There should be a STX transfer of the amount specified.
+    expect(lockResponse.events).toHaveLength(1);
+    expect(lockResponse.events[0].event).toBe('stx_transfer_event');
+
+    expect(lockResponse.events[0].data).toMatchObject({
+      amount: amount.toString(),
+      sender: deployer,
+      recipient: `${deployer}.timelocked-wallet`,
+    });
+  });
+
+  it('Does not allow anyone else to lock an amount', () => {
     const accountA = accounts.get("wallet_1")!;
     const beneficiary = accounts.get("wallet_2")!;
-    const block = chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(10),
-        types.uint(10),
-      ], accountA.address),
-    ]);
 
-    // Should return err-owner-only (err u100).
-    block.receipts[0].result.expectErr().expectUint(100);
-  },
-});
-
-Clarinet.test({
-  name: "Cannot lock more than once",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const deployer = accounts.get("deployer")!;
-    const beneficiary = accounts.get("wallet_1")!;
-    const amount = 10;
-    const block = chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(10),
-        types.uint(amount),
-      ], deployer.address),
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(10),
-        types.uint(amount),
-      ], deployer.address),
-    ]);
-
-    // The first lock worked and STX were transferred.
-    block.receipts[0].result.expectOk().expectBool(true);
-    block.receipts[0].events.expectSTXTransferEvent(
-      amount,
-      deployer.address,
-      `${deployer.address}.timelocked-wallet`,
+    const lockResponse = simnet.callPublicFn(
+      'timelocked-wallet', 'lock',
+      [Cl.principal(beneficiary), Cl.uint(10), Cl.uint(10)],
+      accountA
     );
 
-    // The second lock fails with err-already-locked (err u101).
-    block.receipts[1].result.expectErr().expectUint(101);
+    // Should return err-owner-only (err u100).
+    expect(lockResponse.result).toBeErr(Cl.uint(100));
+  });
 
-    // Assert there are no transfer events.
-    assertEquals(block.receipts[1].events.length, 0);
-  },
-});
-
-Clarinet.test({
-  name: "Unlock height cannot be in the past",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
+  it('Cannot lock more than once', () => {
     const deployer = accounts.get("deployer")!;
     const beneficiary = accounts.get("wallet_1")!;
-    const targetBlockHeight = 10;
+    const unlockAt = 10;
     const amount = 10;
 
-    // Advance the chain until the unlock height plus one.
-    chain.mineEmptyBlockUntil(targetBlockHeight + 1);
+    const lockResponse1 = simnet.callPublicFn(
+      'timelocked-wallet', 'lock',
+      [Cl.principal(beneficiary), Cl.uint(unlockAt), Cl.uint(amount)],
+      deployer
+    );
+    const lockResponse2 = simnet.callPublicFn(
+      'timelocked-wallet', 'lock',
+      [Cl.principal(beneficiary), Cl.uint(unlockAt), Cl.uint(amount)],
+      deployer
+    );
 
-    const block = chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(targetBlockHeight),
-        types.uint(amount),
-      ], deployer.address),
-    ]);
+    // The first lock worked and STX were transferred.
+    expect(lockResponse1.result).toBeOk(Cl.bool(true));
+    expect(lockResponse1.events).toHaveLength(1);
+    expect(lockResponse1.events[0].event).toBe('stx_transfer_event');
 
-    // The second lock fails with err-unlock-in-past (err u102).
-    block.receipts[0].result.expectErr().expectUint(102);
+    expect(lockResponse1.events[0].data).toMatchObject({
+      amount: amount.toString(),
+      sender: deployer,
+      recipient: `${deployer}.timelocked-wallet`
+    });
+
+    // The second lock fails with err-already-locked (err u101).
+    expect(lockResponse2.result).toBeErr(Cl.uint(101));
 
     // Assert there are no transfer events.
-    assertEquals(block.receipts[0].events.length, 0);
-  },
+    expect(lockResponse2.events).toHaveLength(0);
+  });
+
+  it('Unlock height cannot be in the past', () => {
+    const deployer = accounts.get("deployer")!;
+    const beneficiary = accounts.get("wallet_1")!;
+    const amount = 10;
+    const targetBlockHeight = 10;
+
+    // Advance the chain until the unlock height plus one.
+    simnet.mineEmptyBlocks(targetBlockHeight + 1);
+
+    const lockResponse = simnet.callPublicFn(
+      'timelocked-wallet', 'lock',
+      [Cl.principal(beneficiary), Cl.uint(targetBlockHeight), Cl.uint(amount)],
+      deployer
+    );
+
+    // The lock fails with err-unlock-in-past (err u102).
+    expect(lockResponse.result).toBeErr(Cl.uint(102));
+
+    // Assert there are no transfer events.
+    expect(lockResponse.events).toHaveLength(0);
+  });
 });
 ```
 
@@ -379,54 +372,53 @@ to claim. We therefore have to make sure that only the beneficiary can
 successfully call `bestow`.
 
 ```typescript
-Clarinet.test({
-  name: "Allows the beneficiary to bestow the right to claim to someone else",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
+describe('Testing bestow', () => {
+  it('Allows the beneficiary to bestow the right to claim to someone else', () => {
     const deployer = accounts.get("deployer")!;
     const beneficiary = accounts.get("wallet_1")!;
     const newBeneficiary = accounts.get("wallet_2")!;
-    const block = chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(10),
-        types.uint(10),
-      ], deployer.address),
-      Tx.contractCall("timelocked-wallet", "bestow", [
-        types.principal(newBeneficiary.address),
-      ], beneficiary.address),
-    ]);
 
-    // Both results are (ok true).
-    block.receipts.map(({ result }) => result.expectOk().expectBool(true));
-  },
-});
+    const lockResponse = simnet.callPublicFn(
+      'timelocked-wallet', 'lock',
+      [Cl.principal(beneficiary), Cl.uint(10), Cl.uint(10)],
+      deployer
+    );
+    const bestowResponse = simnet.callPublicFn(
+      'timelocked-wallet', 'bestow',
+      [Cl.principal(newBeneficiary)],
+      beneficiary
+    );
 
-Clarinet.test({
-  name:
-    "Does not allow anyone else to bestow the right to claim to someone else (not even the contract owner)",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
+    expect(lockResponse.result).toBeOk(Cl.bool(true));
+    expect(bestowResponse.result).toBeOk(Cl.bool(true));
+  });
+
+  it('Does not allow anyone else to bestow the right to claim to someone else (not even the contract owner)', () => {
     const deployer = accounts.get("deployer")!;
     const beneficiary = accounts.get("wallet_1")!;
-    const accountA = accounts.get("wallet_3")!;
-    const block = chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(10),
-        types.uint(10),
-      ], deployer.address),
-      Tx.contractCall("timelocked-wallet", "bestow", [
-        types.principal(deployer.address),
-      ], deployer.address),
-      Tx.contractCall("timelocked-wallet", "bestow", [
-        types.principal(accountA.address),
-      ], accountA.address),
-    ]);
+    const accountA = accounts.get("wallet_2")!;
+
+    const lockResponse = simnet.callPublicFn(
+      'timelocked-wallet', 'lock',
+      [Cl.principal(beneficiary), Cl.uint(10), Cl.uint(10)],
+      deployer
+    );
+    const bestowResponse1 = simnet.callPublicFn(
+      'timelocked-wallet', 'bestow',
+      [Cl.principal(deployer)],
+      deployer
+    );
+    const bestowResponse2 = simnet.callPublicFn(
+      'timelocked-wallet', 'bestow',
+      [Cl.principal(accountA)],
+      accountA
+    );
 
     // All but the first call fails with err-beneficiary-only (err u104).
-    block.receipts.slice(1).map(({ result }) =>
-      result.expectErr().expectUint(104)
-    );
-  },
+    expect(lockResponse.result).toBeOk(Cl.bool(true));
+    expect(bestowResponse1.result).toBeErr(Cl.uint(104));
+    expect(bestowResponse2.result).toBeErr(Cl.uint(104));
+  });
 });
 ```
 
@@ -436,96 +428,78 @@ For `claim`, we test the cases of the unlock height being reached or not, and
 that only the beneficiary can claim.
 
 ```typescript
-Clarinet.test({
-  name:
-    "Allows the beneficiary to claim the balance when the block-height is reached",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
+describe('Testing claim', () => {
+  it('Allows the beneficiary to claim the balance when the block-height is reached', () => {
     const deployer = accounts.get("deployer")!;
     const beneficiary = accounts.get("wallet_1")!;
     const targetBlockHeight = 10;
     const amount = 10;
-    chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(targetBlockHeight),
-        types.uint(amount),
-      ], deployer.address),
-    ]);
+
+    simnet.callPublicFn(
+      'timelocked-wallet', 'lock',
+      [Cl.principal(beneficiary), Cl.uint(targetBlockHeight), Cl.uint(amount)],
+      deployer
+    );
 
     // Advance the chain until the unlock height.
-    chain.mineEmptyBlockUntil(targetBlockHeight);
+    simnet.mineEmptyBlocks(targetBlockHeight);
 
-    const block = chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "claim", [], beneficiary.address),
-    ]);
+    const claimResponse = simnet.callPublicFn('timelocked-wallet', 'claim', [], beneficiary);
 
     // The claim was successful and the STX were transferred.
-    block.receipts[0].result.expectOk().expectBool(true);
-    block.receipts[0].events.expectSTXTransferEvent(
-      amount,
-      `${deployer.address}.timelocked-wallet`,
-      beneficiary.address,
-    );
-  },
-});
+    expect(claimResponse.result).toBeOk(Cl.bool(true));
 
-Clarinet.test({
-  name:
-    "Does not allow the beneficiary to claim the balance before the block-height is reached",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
+    expect(claimResponse.events[0].data).toMatchObject({
+      amount: amount.toString(),
+      sender: `${deployer}.timelocked-wallet`,
+      recipient: beneficiary
+    });
+  });
+
+  it('Does not allow the beneficiary to claim the balance before the block-height is reached', () => {
     const deployer = accounts.get("deployer")!;
     const beneficiary = accounts.get("wallet_1")!;
     const targetBlockHeight = 10;
     const amount = 10;
-    chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(targetBlockHeight),
-        types.uint(amount),
-      ], deployer.address),
-    ]);
+
+    simnet.callPublicFn(
+      'timelocked-wallet', 'lock',
+      [Cl.principal(beneficiary), Cl.uint(targetBlockHeight), Cl.uint(amount)],
+      deployer
+    );
 
     // Advance the chain until the unlock height minus one.
-    chain.mineEmptyBlockUntil(targetBlockHeight - 1);
+    simnet.mineEmptyBlocks(targetBlockHeight - 4);
 
-    const block = chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "claim", [], beneficiary.address),
-    ]);
+    const claimResponse = simnet.callPublicFn('timelocked-wallet', 'claim', [], beneficiary);
 
     // Should return err-unlock-height-not-reached (err u105).
-    block.receipts[0].result.expectErr().expectUint(105);
-    assertEquals(block.receipts[0].events.length, 0);
-  },
-});
+    expect(claimResponse.result).toBeErr(Cl.uint(105));
+    expect(claimResponse.events).toHaveLength(0);
+  });
 
-Clarinet.test({
-  name:
-    "Does not allow anyone else to claim the balance when the block-height is reached",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
+  it('Does not allow anyone else to claim the balance when the block-height is reached', () => {
     const deployer = accounts.get("deployer")!;
     const beneficiary = accounts.get("wallet_1")!;
     const other = accounts.get("wallet_2")!;
     const targetBlockHeight = 10;
     const amount = 10;
-    chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(targetBlockHeight),
-        types.uint(amount),
-      ], deployer.address),
-    ]);
+
+    simnet.callPublicFn(
+      'timelocked-wallet', 'lock',
+      [Cl.principal(beneficiary), Cl.uint(targetBlockHeight), Cl.uint(amount)],
+      deployer
+    );
 
     // Advance the chain until the unlock height.
-    chain.mineEmptyBlockUntil(targetBlockHeight);
+    simnet.mineEmptyBlocks(targetBlockHeight);
 
-    const block = chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "claim", [], other.address),
-    ]);
+    const claimResponse = simnet.callPublicFn('timelocked-wallet', 'claim', [], other);
 
     // Should return err-beneficiary-only (err u104).
-    block.receipts[0].result.expectErr().expectUint(104);
-    assertEquals(block.receipts[0].events.length, 0);
-  },
+    expect(claimResponse.result).toBeErr(Cl.uint(104));
+    expect(claimResponse.events).toHaveLength(0);
+  });
 });
 ```
 
