@@ -233,81 +233,8 @@ principal directly. The function will be useful when writing unit tests later.
 	(stx-transfer? amount tx-sender (as-contract tx-sender))
 )
 ```
-
-### Unit tests
-
-It is about time we start making our unit tests a bit more manageable by adding
-reusable parts. We will define a bunch of standard values and create a setup
-function to initialise the contract. The function can then be called at the
-beginning of various tests to take care of calling `start` and making an initial
-STX token deposit by calling `deposit`.
-
-In our example, we named the contract `multisig-vault`. Make sure to change the
-`contractName` variable below to your contract name if you gave your contract
-a different name.
-
-```typescript
-const contractName = "multisig-vault";
-
-const defaultStxVaultAmount = 5000;
-const defaultMembers = [
-  "deployer",
-  "wallet_1",
-  "wallet_2",
-  "wallet_3",
-  "wallet_4",
-];
-const defaultVotesRequired = defaultMembers.length - 1;
-
-type InitContractOptions = {
-  chain: Chain;
-  accounts: Map<string, Account>;
-  members?: Array<string>;
-  votesRequired?: number;
-  stxVaultAmount?: number;
-};
-
-function initContract({
-  chain,
-  accounts,
-  members = defaultMembers,
-  votesRequired = defaultVotesRequired,
-  stxVaultAmount = defaultStxVaultAmount,
-}: InitContractOptions) {
-  const deployer = accounts.get("deployer")!;
-  const contractPrincipal = `${deployer.address}.${contractName}`;
-  const memberAccounts = members.map((name) => accounts.get(name)!);
-  const nonMemberAccounts = Array.from(accounts.keys())
-    .filter((key) => !members.includes(key))
-    .map((name) => accounts.get(name)!);
-  const startBlock = chain.mineBlock([
-    Tx.contractCall(
-      contractName,
-      "start",
-      [
-        types.list(
-          memberAccounts.map((account) => types.principal(account.address))
-        ),
-        types.uint(votesRequired),
-      ],
-      deployer.address
-    ),
-    Tx.contractCall(
-      contractName,
-      "deposit",
-      [types.uint(stxVaultAmount)],
-      deployer.address
-    ),
-  ]);
-  return {
-    deployer,
-    contractPrincipal,
-    memberAccounts,
-    nonMemberAccounts,
-    startBlock,
-  };
-}
-```
+---
+## Unit tests
 
 ### Testing start
 
@@ -318,89 +245,52 @@ Let us get the tests for `start` out of the way first:
 - The vault can only be initialised once.
 
 ```typescript
-Clarinet.test({
-  name: "Allows the contract owner to initialise the vault",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const deployer = accounts.get("deployer")!;
-    const memberB = accounts.get("wallet_1")!;
-    const votesRequired = 1;
-    const memberList = types.list([
-      types.principal(deployer.address),
-      types.principal(memberB.address),
-    ]);
-    const block = chain.mineBlock([
-      Tx.contractCall(
-        contractName,
-        "start",
-        [memberList, types.uint(votesRequired)],
-        deployer.address
-      ),
-    ]);
-    block.receipts[0].result.expectOk().expectBool(true);
-  },
-});
+describe('Testing start', () => {
+	test('Allows the contract owner to initialise the vault', () => {
+		const startResponse = simnet.callPublicFn(
+			'multisig-vault', 'start',
+			[memberList, Cl.uint(votesRequired)],
+			deployer
+		);
 
-Clarinet.test({
-  name: "Does not allow anyone else to initialise the vault",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const deployer = accounts.get("deployer")!;
-    const memberB = accounts.get("wallet_1")!;
-    const votesRequired = 1;
-    const memberList = types.list([
-      types.principal(deployer.address),
-      types.principal(memberB.address),
-    ]);
-    const block = chain.mineBlock([
-      Tx.contractCall(
-        contractName,
-        "start",
-        [memberList, types.uint(votesRequired)],
-        memberB.address
-      ),
-    ]);
-    block.receipts[0].result.expectErr().expectUint(100);
-  },
-});
+		expect(startResponse.result).toBeOk(Cl.bool(true));
+	});
 
-Clarinet.test({
-  name: "Cannot start the vault more than once",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const deployer = accounts.get("deployer")!;
-    const memberB = accounts.get("wallet_1")!;
-    const votesRequired = 1;
-    const memberList = types.list([
-      types.principal(deployer.address),
-      types.principal(memberB.address),
-    ]);
-    const block = chain.mineBlock([
-      Tx.contractCall(
-        contractName,
-        "start",
-        [memberList, types.uint(votesRequired)],
-        deployer.address
-      ),
-      Tx.contractCall(
-        contractName,
-        "start",
-        [memberList, types.uint(votesRequired)],
-        deployer.address
-      ),
-    ]);
-    block.receipts[0].result.expectOk().expectBool(true);
-    block.receipts[1].result.expectErr().expectUint(101);
-  },
-});
+	test('Does not allow anyone else to initialise the vault', () => {
+		const startResponse = simnet.callPublicFn(
+			'multisig-vault', 'start',
+			[memberList, Cl.uint(votesRequired)],
+			wallet1
+		);
 
-Clarinet.test({
-  name: "Cannot require more votes than members",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const { startBlock } = initContract({
-      chain,
-      accounts,
-      votesRequired: defaultMembers.length + 1,
-    });
-    startBlock.receipts[0].result.expectErr().expectUint(102);
-  },
+		expect(startResponse.result).toBeErr(Cl.uint(100));
+	});
+
+	test('Cannot start the vault more than once', () => {
+		const startResponse1 = simnet.callPublicFn(
+			'multisig-vault', 'start',
+			[memberList, Cl.uint(votesRequired)],
+			deployer
+		);
+
+		const startResponse2 = simnet.callPublicFn(
+			'multisig-vault', 'start',
+			[memberList, Cl.uint(votesRequired)],
+			deployer
+		);
+
+		expect(startResponse1.result).toBeOk(Cl.bool(true));
+		expect(startResponse2.result).toBeErr(Cl.uint(101));
+	});
+
+	test('Cannot require more votes than members', () => {
+		const startResponse = simnet.callPublicFn(
+			'multisig-vault', 'start',
+			[members, Cl.uint(members.list.length + 1)],
+			deployer
+		);
+		expect(startResponse.result).toBeErr(Cl.uint(102));
+	});
 });
 ```
 
@@ -410,38 +300,25 @@ Only members should be allowed to successfully call `vote`. It should also
 return the right error response if a non-member calls the function.
 
 ```typescript
-Clarinet.test({
-  name: "Allows members to vote",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const { memberAccounts, deployer } = initContract({ chain, accounts });
-    const votes = memberAccounts.map((account) =>
-      Tx.contractCall(
-        contractName,
-        "vote",
-        [types.principal(deployer.address), types.bool(true)],
-        account.address
-      )
-    );
-    const block = chain.mineBlock(votes);
-    block.receipts.map((receipt) => receipt.result.expectOk().expectBool(true));
-  },
-});
+describe('Testing vote', () => {
+	test('Allows members to vote', () => {
+		simnet.callPublicFn('multisig-vault', 'start', [members, Cl.uint(members.list.length)], deployer);
+		simnet.callPublicFn('multisig-vault', 'deposit', [Cl.uint(stxVaultAmount)], deployer);
+		const voteResponse = simnet.callPublicFn('multisig-vault', 'vote', [Cl.principal(deployer), Cl.bool(true)], deployer);
 
-Clarinet.test({
-  name: "Does not allow non-members to vote",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const { nonMemberAccounts, deployer } = initContract({ chain, accounts });
-    const votes = nonMemberAccounts.map((account) =>
-      Tx.contractCall(
-        contractName,
-        "vote",
-        [types.principal(deployer.address), types.bool(true)],
-        account.address
-      )
-    );
-    const block = chain.mineBlock(votes);
-    block.receipts.map((receipt) => receipt.result.expectErr().expectUint(103));
-  },
+		expect(voteResponse.result).toBeOk(Cl.bool(true));
+	});
+
+	test('Does not allow non-members to vote', () => {
+		// Without deployer
+		const members = Cl.list([Cl.principal(wallet1), Cl.principal(wallet2), Cl.principal(wallet3), Cl.principal(wallet4)]);
+
+		simnet.callPublicFn('multisig-vault', 'start', [members, Cl.uint(members.list.length)], deployer);
+		simnet.callPublicFn('multisig-vault', 'deposit', [Cl.uint(stxVaultAmount)], deployer);
+		const voteResponse = simnet.callPublicFn('multisig-vault', 'vote', [Cl.principal(deployer), Cl.bool(true)], deployer);
+
+		expect(voteResponse.result).toBeErr(Cl.uint(103));
+	});
 });
 ```
 
@@ -451,28 +328,15 @@ Clarinet.test({
 for a member-recipient combination.
 
 ```typescript
-Clarinet.test({
-  name: "Can retrieve a member's vote for a principal",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const { memberAccounts, deployer } = initContract({ chain, accounts });
-    const [memberA] = memberAccounts;
-    const vote = types.bool(true);
-    chain.mineBlock([
-      Tx.contractCall(
-        contractName,
-        "vote",
-        [types.principal(deployer.address), vote],
-        memberA.address
-      ),
-    ]);
-    const receipt = chain.callReadOnlyFn(
-      contractName,
-      "get-vote",
-      [types.principal(memberA.address), types.principal(deployer.address)],
-      memberA.address
-    );
-    receipt.result.expectBool(true);
-  },
+describe('Testing get-vote', () => {
+	test("Can retrieve a member's vote for a principal", () => {
+		simnet.callPublicFn('multisig-vault', 'start', [members, Cl.uint(members.list.length)], deployer);
+		simnet.callPublicFn('multisig-vault', 'deposit', [Cl.uint(stxVaultAmount)], deployer);
+		simnet.callPublicFn('multisig-vault', 'vote', [Cl.principal(deployer), Cl.bool(true)], wallet1);
+		const voteResponse = simnet.callReadOnlyFn('multisig-vault', 'get-vote', [Cl.principal(wallet1), Cl.principal(deployer)], deployer);
+
+		expect(voteResponse.result).toBeBool(true);
+	});
 });
 ```
 
@@ -483,61 +347,27 @@ votes for the `tx-sender` if the threshold is met. Otherwise it returns an
 `(err u104)` (`err-votes-required-not-met`).
 
 ```typescript
-Clarinet.test({
-  name: "Principal that meets the vote threshold can withdraw the vault balance",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const { contractPrincipal, memberAccounts } = initContract({
-      chain,
-      accounts,
-    });
-    const recipient = memberAccounts.shift()!;
-    const votes = memberAccounts.map((account) =>
-      Tx.contractCall(
-        contractName,
-        "vote",
-        [types.principal(recipient.address), types.bool(true)],
-        account.address
-      )
-    );
-    chain.mineBlock(votes);
-    const block = chain.mineBlock([
-      Tx.contractCall(contractName, "withdraw", [], recipient.address),
-    ]);
-    block.receipts[0].result.expectOk().expectUint(votes.length);
-    block.receipts[0].events.expectSTXTransferEvent(
-      defaultStxVaultAmount,
-      contractPrincipal,
-      recipient.address
-    );
-  },
-});
+describe('Testing withdraw', () => {
+	test('Principal that meets the vote threshold can withdraw the vault balance', () => {
+		simnet.callPublicFn('multisig-vault', 'start', [members, Cl.uint(votesRequired)], deployer);
+		simnet.callPublicFn('multisig-vault', 'deposit', [Cl.uint(stxVaultAmount)], deployer);
 
-Clarinet.test({
-  name: "Principals that do not meet the vote threshold cannot withdraw the vault balance",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const { memberAccounts, nonMemberAccounts } = initContract({
-      chain,
-      accounts,
-    });
-    const recipient = memberAccounts.shift()!;
-    const [nonMemberA] = nonMemberAccounts;
-    const votes = memberAccounts
-      .slice(0, defaultVotesRequired - 1)
-      .map((account) =>
-        Tx.contractCall(
-          contractName,
-          "vote",
-          [types.principal(recipient.address), types.bool(true)],
-          account.address
-        )
-      );
-    chain.mineBlock(votes);
-    const block = chain.mineBlock([
-      Tx.contractCall(contractName, "withdraw", [], recipient.address),
-      Tx.contractCall(contractName, "withdraw", [], nonMemberA.address),
-    ]);
-    block.receipts.map((receipt) => receipt.result.expectErr().expectUint(104));
-  },
+		simnet.callPublicFn('multisig-vault', 'vote', [Cl.principal(wallet1), Cl.bool(true)], deployer);
+		simnet.callPublicFn('multisig-vault', 'vote', [Cl.principal(wallet1), Cl.bool(true)], wallet2);
+		const withdrawResponse = simnet.callPublicFn('multisig-vault', 'withdraw', [], wallet1);
+
+		expect(withdrawResponse.result).toBeOk(Cl.uint(2));
+	});
+
+	test('Principals that do not meet the vote threshold cannot withdraw the vault balance', () => {
+		simnet.callPublicFn('multisig-vault', 'start', [members, Cl.uint(2)], deployer);
+		simnet.callPublicFn('multisig-vault', 'deposit', [Cl.uint(stxVaultAmount)], deployer);
+
+		simnet.callPublicFn('multisig-vault', 'vote', [Cl.principal(wallet1), Cl.bool(true)], deployer);
+		const withdrawResponse = simnet.callPublicFn('multisig-vault', 'withdraw', [], wallet1);
+
+		expect(withdrawResponse.result).toBeErr(Cl.uint(104));
+	});
 });
 ```
 
@@ -548,39 +378,18 @@ add a final test where a vote change causes a recipient to no longer be eligible
 to claim the balance.
 
 ```typescript
-Clarinet.test({
-  name: "Members can change votes at-will, thus making an eligible recipient uneligible again",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const { memberAccounts } = initContract({ chain, accounts });
-    const recipient = memberAccounts.shift()!;
-    const votes = memberAccounts.map((account) =>
-      Tx.contractCall(
-        contractName,
-        "vote",
-        [types.principal(recipient.address), types.bool(true)],
-        account.address
-      )
-    );
-    chain.mineBlock(votes);
-    const receipt = chain.callReadOnlyFn(
-      contractName,
-      "tally-votes",
-      [],
-      recipient.address
-    );
-    receipt.result.expectUint(votes.length);
-    const block = chain.mineBlock([
-      Tx.contractCall(
-        contractName,
-        "vote",
-        [types.principal(recipient.address), types.bool(false)],
-        memberAccounts[0].address
-      ),
-      Tx.contractCall(contractName, "withdraw", [], recipient.address),
-    ]);
-    block.receipts[0].result.expectOk().expectBool(true);
-    block.receipts[1].result.expectErr().expectUint(104);
-  },
+describe('Testing changing votes', () => {
+	test('Members can change votes at-will, thus making an eligible recipient uneligible again', () => {
+		simnet.callPublicFn('multisig-vault', 'start', [members, Cl.uint(2)], deployer);
+		simnet.callPublicFn('multisig-vault', 'deposit', [Cl.uint(stxVaultAmount)], deployer);
+
+		simnet.callReadOnlyFn('multisig-vault', 'tally-votes', [], wallet1);
+		const voteResponse = simnet.callPublicFn('multisig-vault', 'vote', [Cl.principal(wallet1), Cl.bool(false)], deployer);
+		const withdrawResponse = simnet.callPublicFn('multisig-vault', 'withdraw', [], wallet1);
+
+		expect(voteResponse.result).toBeOk(Cl.bool(true));
+		expect(withdrawResponse.result).toBeErr(Cl.uint(104));
+	});
 });
 ```
 

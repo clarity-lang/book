@@ -175,8 +175,8 @@ are comprehensive, then you do not need to do anything special to make use of
 this feature. The unit tests we wrote in
 [chapter 7.4](ch07-04-testing-your-contract.md) can be executed while also
 analysing costs by adding the `--costs` option. The full command is thus as
-follows: `clarinet test --costs`. You will see that a costs analysis table will
-be printed after the result of the unit tests.
+follows: `npm run test:report`. You will find file `costs-reports.json` in 
+project root after running the tests. 
 
 ```clarity,{"nonplayable":true}
 Running counter/tests/counter_test.ts
