@@ -139,7 +139,7 @@ There are no explicit rules on which types you should wrap for your responses.
 Standards are currently being proposed and we will touch upon a few in the
 chapter on _Stacks Improvement Proposals_ (SIPs).
 
-Responses can be unwrapped in the same was as optional types:
+Responses can be unwrapped in the same way as optional types:
 
 ```Clarity
 (unwrap-panic (ok true))
