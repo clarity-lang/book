@@ -7,7 +7,7 @@ triggers a revert. That is pretty significant, but understanding the _control
 flow_ of your smart contract is even more important.
 
 What is control flow? Put simply, it is the order in which expressions are
-evaluated. The functions introduced up until this point allow follow a simple
+evaluated. The functions introduced up until this point allow following a simple
 left-to-right rule. `begin` perfectly illustrates this:
 
 ```Clarity

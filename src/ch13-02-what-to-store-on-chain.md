@@ -98,11 +98,11 @@ function update_job(job_id, data) {
 ### Historical data
 
 The blockchain by virtue of its fundamental principles already stores the full
-history. Smarts contracts therefore do not usually have to track a history of
+history. Smart contracts therefore do not usually have to track a history of
 something themselves. If you are building an on-chain auction, for example, you
 may want to track the history of the highest bids. Maybe you store the highest
 bid in a variable and you add the previous highest bids in a list (bad) or a map
-(less bad). No need! The built-in function `at-block` allows you go to back in
+(less bad). No need! The built-in function `at-block` allows you to go back in
 time. It changes the context to what the chain state was at the specified block,
 allowing you to see what the highest bid variable contained.
 
