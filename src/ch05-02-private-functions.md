@@ -46,7 +46,7 @@ it is _abstracted away_ to its own private function called `is-valid-caller`.
 (print (delete-recipient 'ST1J4G6RR643BCG8G8SR6M2D9Z9KXT2NJDRK3FBTK))
 ```
 
-Another good reason to define private functions it to reduce overall function
+Another good reason to define private functions is to reduce overall function
 complexity. Large public functions can be harder to maintain and are more prone
 to developer error. Splitting such functions up into a public function and a
 number of smaller private functions can alleviate these issues.

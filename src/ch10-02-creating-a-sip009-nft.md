@@ -47,7 +47,7 @@ and `nft-burn?` to manage the NFT.
 Click the play button on the example above or copy it to the REPL to see the NFT
 events emitted for each function. Try defining and minting multiple NFTs, doing
 transfers and burns. Like the others, these functions are safe by design. It is
-not possible to transfer NFTs a principal does does not own, minting an NFT with
+not possible to transfer NFTs a principal does not own, minting an NFT with
 the same ID twice, and burning tokens that do not exist.
 
 ### Project setup
