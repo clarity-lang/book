@@ -16,15 +16,13 @@ enough to pick up.
 ### Unit tests
 
 Clarinet will generate a test file for each contract you instantiate using the
-`clarinet new contract` command. In the folder `tests` you will find one for our
-counter contract called `counter_test.ts`. Depending on the version of Clarinet
+`clarinet contract new` command. In the folder `tests` you will find one for our
+counter contract called `counter.test.ts`. Depending on the version of Clarinet
 you are using, it should have added some imports and template code to the test
 file. You may remove the template code but make sure you leave the `import`
 statements intact.
 
-![Clarinet test file template](assets/ch07/3.png)
-
-Tests are defined using the `Clarinet.test` function. They have a name, which is
+Tests are defined using the `test()` function. They have a name, which is
 used as a description, and a callback function that is executed on test. Before
 each test commences, Clarinet will instantiate a fresh local chain and then run
 the function. The function should run one or more contract calls against the
@@ -58,31 +56,31 @@ We will therefore start by writing a test for the default behaviour of
 `count-up` before.
 
 ```typescript
-Clarinet.test({
-  name: "get-count returns u0 for principals that never called count-up before",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    // Get the deployer account.
-    let deployer = accounts.get("deployer")!;
+test('get-count returns u0 for principals that never called count-up before', () => {
+  // Get the deployer account.
+  const deployer = accounts.get("deployer")!;
 
-    // Call the get-count read-only function.
-    // The first parameter is the contract name, the second the
-    // function name, and the third the function arguments as
-    // an array. The final parameter is the tx-sender.
-    let count = chain.callReadOnlyFn("counter", "get-count", [
-      types.principal(deployer.address),
-    ], deployer.address);
+  // Call the get-count read-only function.
+  // The first parameter is the contract name, the second the function name, and the
+  // third the function arguments as an array. The final parameter is the tx-sender.
+  const incrementResponse = simnet.callReadOnlyFn(
+    'counter',
+    'get-count',
+    [Cl.standardPrincipal(deployer)],
+    deployer
+  );
 
-    // Assert that the returned result is a uint with a value of 0 (u0).
-    count.result.expectUint(0);
-  },
+  // Assert that the returned result is a uint with a value of 0 (u0).
+  expect(incrementResponse.result).toBeUint(0);
 });
 ```
 
-We are now ready to execute the test using `clarinet test`. If everything went
-well, our test should pass with an "ok" status.
+We are now ready to execute the test using `npm test`. If everything went
+well, our test should pass with an "passed" status.
 
 ```bash
-* get-count returns u0 for principals that never called count-up before ... ok (146ms)
+✓ tests/counter.test.ts (1)
+   ✓ get-count returns u0 for principals that never called count-up before
 ```
 
 ### Testing count-up
@@ -94,38 +92,31 @@ conditions are always the same. We therefore know that the first `count-up` call
 will always result in the counter for that `tx-sender` to be `u1`.
 
 ```typescript
-Clarinet.test({
-  name: "count-up counts up for the tx-sender",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    // Get the deployer account.
-    let deployer = accounts.get("deployer")!;
+test('count-up counts up for the tx-sender', () => {
+  // Get the deployer account.
+  const deployer = accounts.get("deployer")!;
 
-    // Mine a block with one transaction.
-    let block = chain.mineBlock([
-      // Generate a contract call to count-up from the deployer address.
-      Tx.contractCall("counter", "count-up", [], deployer.address),
-    ]);
+  // Call count-up for deployer.
+  const response = simnet.callPublicFn('counter', 'count-up', [], deployer);
 
-    // Get the first (and only) transaction receipt.
-    let [receipt] = block.receipts;
+  // Assert that the returned result is a boolean true.
+  expect(response.result).toBeOk(Cl.bool(true));
 
-    // Assert that the returned result is a boolean true.
-    receipt.result.expectOk().expectBool(true);
+  // Get the counter value.
+  const getCountResponse = simnet.callReadOnlyFn(
+    'counter',
+    'get-count',
+    [Cl.standardPrincipal(deployer)],
+    deployer
+  );
 
-    // Get the counter value.
-    let count = chain.callReadOnlyFn("counter", "get-count", [
-      types.principal(deployer.address),
-    ], deployer.address);
-
-    // Assert that the returned result is a u1.
-    count.result.expectUint(1);
-  },
+  // Assert that the returned result is a u1.
+  expect(getCountResponse.result).toBeUint(1);
 });
 ```
 
-Clarinet simulates the mining process by calling `chain.mineBlock()` with an
-array of transactions. The contract call transactions themselves are constructed
-using the `Tx.contractCall()`. The Clarinet TypeScript library provides a lot of
+The contract call transactions are constructed
+using the `simnet.callPublicFn()`. The Clarinet TypeScript library provides a lot of
 helper functions to mine blocks, construct transactions, and create function
 arguments. Inspect the source or see the Clarinet documentation for a full
 overview.
@@ -137,56 +128,57 @@ contract, it makes sense to add another test that explicitly tests the
 multiplayer aspect of our contract.
 
 ```typescript
-Clarinet.test({
-  name: "counters are specific to the tx-sender",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    // Get some accounts
-    let deployer = accounts.get("deployer")!;
-    let wallet1 = accounts.get("wallet_1")!;
-    let wallet2 = accounts.get("wallet_2")!;
+test('counters are specific to the tx-sender', () => {
+  // Get some accounts.
+  const deployer = accounts.get("deployer")!;
+  const wallet1 = accounts.get("wallet_1")!;
+  const wallet2 = accounts.get("wallet_2")!;
 
-    // Mine a few contract calls to count-up
-    let block = chain.mineBlock([
-      // The deployer account calls count-up zero times.
+  // Wallet 1 calls count-up one time.
+  simnet.callPublicFn('counter', 'count-up', [], wallet1);
 
-      // Wallet 1 calls count-up one time.
-      Tx.contractCall("counter", "count-up", [], wallet1.address),
+  // Wallet 2 calls count-up two times.
+  simnet.callPublicFn('counter', 'count-up', [], wallet2);
+  simnet.callPublicFn('counter', 'count-up', [], wallet2);
 
-      // Wallet 2 calls count-up two times.
-      Tx.contractCall("counter", "count-up", [], wallet2.address),
-      Tx.contractCall("counter", "count-up", [], wallet2.address),
-    ]);
+  // Get and assert the counter value for deployer.
+  const deployerCount = simnet.callReadOnlyFn(
+    'counter',
+    'get-count',
+    [Cl.standardPrincipal(deployer)],
+    deployer
+  );
+  expect(deployerCount.result).toBeUint(0);
 
-    // Get and assert the counter value for deployer.
-    let deployerCount = chain.callReadOnlyFn("counter", "get-count", [
-      types.principal(deployer.address),
-    ], deployer.address);
-    deployerCount.result.expectUint(0);
+  // Get and assert the counter value for wallet 1.
+  const wallet1Count = simnet.callReadOnlyFn(
+    'counter',
+    'get-count',
+    [Cl.standardPrincipal(wallet1)],
+    wallet1
+  );
+  expect(wallet1Count.result).toBeUint(1);
 
-    // Get and assert the counter value for wallet 1.
-    let wallet1Count = chain.callReadOnlyFn("counter", "get-count", [
-      types.principal(wallet1.address),
-    ], wallet1.address);
-    wallet1Count.result.expectUint(1);
-
-    // Get and assert the counter value for wallet 2.
-    let wallet2Count = chain.callReadOnlyFn("counter", "get-count", [
-      types.principal(wallet2.address),
-    ], wallet2.address);
-    wallet2Count.result.expectUint(2);
-  },
+  // Get and assert the counter value for wallet 2.
+  const wallet2Count = simnet.callReadOnlyFn(
+    'counter',
+    'get-count',
+    [Cl.standardPrincipal(wallet2)],
+    wallet2
+  );
+  expect(wallet2Count.result).toBeUint(2);
 });
 ```
 
-Let us again run our tests using `clarinet test`. Clarinet will execute all
+Let us again run our tests using `npm test`. Clarinet will execute all
 tests and show us the result. We should get three ok's. If, not then the output
 will show you where it went wrong. Edit your code and try again.
 
 ```bash
-Running counter/tests/counter_test.ts
-* get-count returns u0 for principals that never called count-up before ... ok (142ms)
-* count-up counts up for the tx-sender ... ok (144ms)
-* counters are specific to the tx-sender ... ok (148ms)
+ ✓ tests/counter.test.ts (3)
+   ✓ get-count returns u0 for principals that never called count-up before
+   ✓ count-up counts up for the tx-sender
+   ✓ counters are specific to the tx-sender
 ```
 
 That concludes our first project. You now know what the entire Clarity smart
