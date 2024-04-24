@@ -5,7 +5,7 @@ contract will have the following features:
 
 - A data store that keeps a counter per principal.
 - A public function `count-up` that increments the counter for `tx-sender`.
-- A public function `get-count` that returns the current counter value for the
+- A read-only function `get-count` that returns the current counter value for the
   passed principal.
 
 Once the contract is finished, we will look at how we can interact with the
