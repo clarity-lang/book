@@ -127,7 +127,7 @@ a contract.
 
 Zero balances are a little boring, so let us send some some STX to a principal:
 
-```Clarity,{"setup":["::mint_stx ST000000000000000000002AMW42H 1000000"]}
+```Clarity
 (stx-transfer? u500 tx-sender 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE)
 ```
 

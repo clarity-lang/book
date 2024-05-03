@@ -45,7 +45,7 @@ index _larger_ than the total size of the list. We see that it results in a
 `none` value.
 
 ```Clarity
-(element-at (list 4 8 15 16 23 42) u5000)
+(element-at? (list 4 8 15 16 23 42) u5000)
 ```
 
 When writing smart contracts, the developer must handle cases where `(some ...)`
