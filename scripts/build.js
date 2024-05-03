@@ -74,17 +74,6 @@ async function build(input_path, output_path, template) {
         "utf8"
       );
   });
-  const repl_file = path.join(output_path, "repl/clarity_repl_bg.wasm");
-  let repl_exists = false;
-  try {
-    repl_exists = (await fs.stat(repl_file)).code !== "ENOENT";
-  } catch (error) {}
-  // if (!repl_exists)
-  // 	{
-  // 	console.log(`Downloading REPL WASM from ${repl_binary_url}`);
-  // 	await fs.mkdir(path.join(output_path,'repl'));
-  // 	fs.writeFile(repl_file,Buffer.from(await (await fetch(repl_binary_url)).arrayBuffer()));
-  // 	}
 }
 
 fs.readFile(path.resolve(__dirname, "../templates/base.html"), "utf8").then(
