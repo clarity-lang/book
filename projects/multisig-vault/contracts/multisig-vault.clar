@@ -19,13 +19,14 @@
 		(asserts! (>= (len new-members) new-votes-required) err-more-votes-than-members-required)
 		(var-set members new-members)
 		(var-set votes-required new-votes-required)
+
 		(ok true)
 	)
 )
 
 (define-public (vote (recipient principal) (decision bool))
 	(begin
-		(asserts! (is-some (index-of (var-get members) tx-sender)) err-not-a-member)
+		(asserts! (is-some (index-of? (var-get members) tx-sender)) err-not-a-member)
 		(ok (map-set votes {member: tx-sender, recipient: recipient} {decision: decision}))
 	)
 )
