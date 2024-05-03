@@ -28,12 +28,3 @@ it detects a file change.
 
 Creative Commons Attribution Share Alike 4.0 International. Any code is licensed
 under MIT.
-
-
-```json
-  "overrides": {
-    "@hirosystems/clarinet-sdk-browser": {
-      "@hirosystems/clarinet-sdk-wasm-browser": "file:../clarinet/components/clarinet-sdk-wasm/pkg-browser"
-    }
-  }
-```
