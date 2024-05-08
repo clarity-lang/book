@@ -1,7 +1,7 @@
 ## Installing Clarinet
 
 ### What is Clarinet?
-Clarinet is a Clarity runtime packaged as a command line tool, designed to facilitate smart contract understanding, development, testing and deployment. Clarinet consists of a Clarity REPL and a testing harness, which, when used together allow you to rapidly develop and test a Clarity smart contract, with the need to deploy the contract to a local devnet or testnet.
+Clarinet is a Clarity runtime packaged as a command line tool, designed to facilitate smart contract understanding, development, testing and deployment. Clarinet consists of a Clarity REPL and a testing harness, which, when used together allow you to rapidly develop and test a Clarity smart contract, without the need to deploy the contract to a local devnet or testnet.
 
 Clarity is a decidable smart contract language that optimises for predictability and security, designed for the Stacks blockchain. Smart contracts allow developers to encode essential business logic on a blockchain.
 
@@ -48,11 +48,11 @@ To install Clarinet from pre-built binaries, download the latest release from th
 Unzip the binary, then copy it to a location that is already in your path, such as `/usr/local/bin`.
 
 ```sh
-# note: you can change the v0.27.0 with version that are available in the releases page.
-wget -nv https://github.com/hirosystems/clarinet/releases/download/v0.27.0/clarinet-linux-x64-glibc.tar.gz -O clarinet-linux-x64.tar.gz
+# note: you can change v2.6.0 with the latest version available on the releases page.
+wget -nv https://github.com/hirosystems/clarinet/releases/download/v2.6.0/clarinet-linux-x64-glibc.tar.gz -O clarinet-linux-x64.tar.gz
 tar -xf clarinet-linux-x64.tar.gz
 chmod +x ./clarinet
-mv ./clarinet /usr/local/bin
+sudo mv ./clarinet /usr/local/bin
 ```
 
 On MacOS, you may get security errors when trying to run the pre-compiled binary. You can resolve the security warning
