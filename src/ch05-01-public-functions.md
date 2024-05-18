@@ -17,7 +17,7 @@ an `ok`.
 
 The effects of returning an `ok` or an `err` are illustrated by the example
 below. It is a basic function that takes an unsigned integer as an input and
-will return an `ok` if it is even or an `err` if it is uneven. It will also
+will return an `ok` if it is even or an `err` if it is odd. It will also
 increment a variable called `even-values` at the start of the function. To check
 if the number is even, we calculate the remainder of a division by two and check
 that it is equal to zero using the `is-eq` function (_n mod 2 should equal 0_).
@@ -33,7 +33,7 @@ that it is equal to zero using the `is-eq` function (_n mod 2 should equal 0_).
 		;; check if the input number is even (number mod 2 equals 0).
 		(if (is-eq (mod number u2) u0)
 			(ok "the number is even")
-			(err "the number is uneven")
+			(err "the number is odd")
 		)
 	)
 )
@@ -54,7 +54,7 @@ seems intuitive that the number should increment on every function call.
 
 Edit the example above and try going through the following iterations:
 
-- Replace the uneven number `u7` with an even number like `u8`. Does the
+- Replace the odd number `u7` with an even number like `u8`. Does the
   printout of `even-values` contain `u1` or `u2`?
 - Change the `err` type in the `if` expression to an `ok`. What is the value of
   `even-values` then?
