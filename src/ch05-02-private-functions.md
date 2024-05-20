@@ -4,11 +4,11 @@ Private functions are defined in the same manner as public functions. The
 difference is that they can only be called by the current contract. They cannot
 be called from other smart contracts, nor can they be called directly by sending
 a transaction. Private functions are useful to create utility or helper
-functions to cut down on code repetition. If you find yourself repeating the
+functions to cut down on code repetition. If you find yourself repeating
 similar expressions in multiple locations, then it is worth considering turning
 those expressions into a separate private function.
 
-The contract bellow allows only the contract owner to update the `recipients`
+The contract below allows only the contract owner to update the `recipients`
 map via two public functions. Instead of having to repeat the `tx-sender` check,
 it is _abstracted away_ to its own private function called `is-valid-caller`.
 
