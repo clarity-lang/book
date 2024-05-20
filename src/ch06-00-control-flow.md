@@ -29,12 +29,12 @@ great smart contract developer. The names of the control flow functions are:
 
 Up until now, we used `if` expressions to either return an `ok` or an `err`
 response. Recall the return portion of the `count-even` function in the chapter
-on [public function](ch05-01-public-functions.md):
+on [public functions](ch05-01-public-functions.md):
 
 ```Clarity,{"nonplayable":true}
 (if (is-eq (mod number u2) u0)
 	(ok "the number is even")
-	(err "the number is uneven")
+	(err "the number is odd")
 )
 ```
 
