@@ -59,10 +59,12 @@ it.
 ```
 
 Trying to unwrap a `none` will result in an error because there is nothing to
-unwrap. The _"panic"_ in `unwrap-panic` should give that away.
+unwrap. The _"panic"_ in `unwrap-panic` should give that away. (We use a trick with
+`if` to provide information about the type of the optional value, otherwise Clarity can't
+handle the expression.)
 
 ```Clarity
-(unwrap-panic none)
+(unwrap-panic (if true none (some u10)))
 ```
 
 Later chapters on error handling and defining custom functions will dive into
