@@ -25,7 +25,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
-    "@hirosystems/clarinet-sdk-browser": "^2.7.0-beta4",
+    "@hirosystems/clarinet-sdk-browser": "^2.7.0-beta5",
+    "@hirosystems/clarinet-sdk-wasm-browser": "^2.7.0-beta6",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",

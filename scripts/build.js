@@ -3,10 +3,13 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { build_page, link_page } from "../lib/builder.js";
+import { fileURLToPath } from "node:url";
 
-const __dirname = import.meta.dirname;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const [, , input, output] = process.argv;
+
 const input_path = path.resolve(__dirname, input || "../src");
 const output_path = path.resolve(__dirname, output || "../build");
 
