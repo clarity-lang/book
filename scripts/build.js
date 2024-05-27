@@ -1,17 +1,17 @@
 #!/usr/bin/env node
-import fs from "node:fs/promises";
-import path from "node:path";
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
-import { build_page, link_page } from "../lib/builder.js";
-import { fileURLToPath } from "node:url";
+import { build_page, link_page } from '../lib/builder.js';
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const [, , input, output] = process.argv;
 
-const input_path = path.resolve(__dirname, input || "../src");
-const output_path = path.resolve(__dirname, output || "../build");
+const input_path = path.resolve(__dirname, input || '../src');
+const output_path = path.resolve(__dirname, output || '../build');
 
 async function readdir_sorted(dir, subdir) {
   let entries = [];
@@ -27,10 +27,10 @@ async function readdir_sorted(dir, subdir) {
 }
 
 async function build(input_path, output_path, template) {
-  console.log("Starting build");
+  console.log('Starting build');
   const summary = await fs.readFile(
-    path.resolve(__dirname, "../src/SUMMARY.md"),
-    "utf8"
+    path.resolve(__dirname, '../src/SUMMARY.md'),
+    'utf8'
   );
 
   for (const { entry, name } of await readdir_sorted(input_path)) {
@@ -50,21 +50,21 @@ async function build(input_path, output_path, template) {
       entry.substr(input_path.length)
     );
 
-    entry.substr(-3) === ".md"
+    entry.substr(-3) === '.md'
       ? fs.writeFile(
-          output_file_path.slice(0, -3) + ".html",
+          output_file_path.slice(0, -3) + '.html',
           await build_page(entry, { template, summary }),
-          "utf8"
+          'utf8'
         )
       : fs.copyFile(entry, output_file_path);
-    if (name === "title-page.md")
+    if (name === 'title-page.md')
       fs.writeFile(
-        path.join(output_path, "index.html"),
+        path.join(output_path, 'index.html'),
         await build_page(entry, { template, summary }),
-        "utf8"
+        'utf8'
       );
   }
-  console.log("Linking chapters");
+  console.log('Linking chapters');
   const chapter_files = (await readdir_sorted(output_path)).filter((d) =>
     d.name.match(/^ch[0-9]+-[0-9]+-[\S]+\.html$/)
   );
@@ -74,19 +74,19 @@ async function build(input_path, output_path, template) {
       fs.writeFile(
         entry,
         await link_page(entry, prev && prev.name, next && next.name),
-        "utf8"
+        'utf8'
       );
   });
 }
 
-fs.readFile(path.resolve(__dirname, "../templates/base.html"), "utf8").then(
+fs.readFile(path.resolve(__dirname, '../templates/base.html'), 'utf8').then(
   (template) => build(input_path, output_path, template)
 );
 
 fs.copyFile(
   path.resolve(
     __dirname,
-    "../node_modules/@hirosystems/clarinet-sdk-wasm-browser/clarinet_sdk_bg.wasm"
+    '../node_modules/@hirosystems/clarinet-sdk-wasm-browser/clarinet_sdk_bg.wasm'
   ),
-  path.resolve(__dirname, "../build/clarinet_sdk_bg.wasm")
+  path.resolve(__dirname, '../build/clarinet_sdk_bg.wasm')
 );
