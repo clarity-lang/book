@@ -45,7 +45,7 @@ index _larger_ than the total size of the list. We see that it results in a
 `none` value.
 
 ```Clarity
-(element-at (list 4 8 15 16 23 42) u5000)
+(element-at? (list 4 8 15 16 23 42) u5000)
 ```
 
 When writing smart contracts, the developer must handle cases where `(some ...)`
@@ -59,10 +59,12 @@ it.
 ```
 
 Trying to unwrap a `none` will result in an error because there is nothing to
-unwrap. The _"panic"_ in `unwrap-panic` should give that away.
+unwrap. The _"panic"_ in `unwrap-panic` should give that away. (We use a trick with
+`if` to provide information about the type of the optional value, otherwise Clarity can't
+handle the expression.)
 
 ```Clarity
-(unwrap-panic none)
+(unwrap-panic (if true none (some u10)))
 ```
 
 Later chapters on error handling and defining custom functions will dive into

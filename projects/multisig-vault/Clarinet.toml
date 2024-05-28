@@ -1,5 +1,7 @@
 [project]
 name = "multisig-vault"
 requirements = []
+
 [contracts.multisig-vault]
 path = "contracts/multisig-vault.clar"
+epoch = "2.5"
