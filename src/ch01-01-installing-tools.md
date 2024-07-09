@@ -1,35 +1,42 @@
 ## Installing Clarinet
 
 ### What is Clarinet?
+
 Clarinet is a Clarity runtime packaged as a command line tool, designed to facilitate smart contract understanding, development, testing and deployment. Clarinet consists of a Clarity REPL and a testing harness, which, when used together allow you to rapidly develop and test a Clarity smart contract, with the need to deploy the contract to a local devnet or testnet.
 
 Clarity is a decidable smart contract language that optimises for predictability and security, designed for the Stacks blockchain. Smart contracts allow developers to encode essential business logic on a blockchain.
 
 ### Install on macOS (Homebrew)
+
 This process relies on the macOS package manager called [Homebrew](https://brew.sh/). Using the `brew` command you can easily add powerful functionality to your mac, but first we have to install it.
 
 To get started, launch your [Terminal](https://support.apple.com/en-ph/guide/terminal/welcome/mac) (/Applications/Utilities/Terminal) application. Terminal is a versatile command line system that comes with every Mac computer.
 
 If you do not already have [XCode](https://developer.apple.com/xcode/) installed, it's best to first install the command line tools as these will be used by homebrew:
+
 ```bash
 xcode-select --install
 ```
 
 When the XCode is complete, proceed with Homebrew installation:
+
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 ```
 
 Now you can test your installation to ensure you have installed brew correctly, simply type:
+
 ```bash
 % brew --version
 Homebrew 3.6.3
 ```
 
 Finally, you can now install the Clarinet on your mac:
+
 ```bash
 brew install clarinet
 ```
+
 Just follow the terminal prompts if necessary.
 
 ### Install on Windows
@@ -104,7 +111,7 @@ your favourite Terminal emulator.
 
 ```bash
 % clarinet --version
-clarinet-cli 1.0.2
+clarinet-cli 2.6.0
 ```
 
 More information about Clarinet: [https://github.com/hirosystems/clarinet/blob/develop/README.md](https://github.com/hirosystems/clarinet/blob/develop/README.md)

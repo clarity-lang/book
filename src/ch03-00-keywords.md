@@ -10,7 +10,7 @@ Reflects the current block height of the Stacks blockchain as an unsigned
 integer. If we imagine the chain tip to be at height 5, we can read that number
 at any point in our code.
 
-```Clarity,{"setup":["::advance_chain_tip 5"]}
+```Clarity,{"mineBlocks": 5}
 block-height
 ```
 

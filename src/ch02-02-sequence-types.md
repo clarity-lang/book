@@ -126,14 +126,14 @@ They also allow you to extract elements at a particular index. The following
 takes the _fourth_ element from the list. (Counting starts at 0.)
 
 ```Clarity
-(element-at (list 4 8 15 16 23 42) u3)
+(element-at? (list 4 8 15 16 23 42) u3)
 ```
 
 You can also do the reverse and find the index of a particular item in a
 sequence. We can search the list to see if it contains the value `23`.
 
 ```Clarity
-(index-of (list 4 8 15 16 23 42) 23)
+(index-of? (list 4 8 15 16 23 42) 23)
 ```
 
 And we get `(some u4)`, indicating there is a value of `23` at index four. The

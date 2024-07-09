@@ -11,7 +11,7 @@ function. NFTs have a unique asset name (per contract) and are individually
 identified by an asset identifier. The developer is free to choose the
 identifier type although an incrementing unsigned integer is most common.
 
-```Clarity,{"nonplayable",true}
+```Clarity,{"nonplayable":true}
 (define-non-fungible-token asset-name asset-identifier-type)
 ```
 

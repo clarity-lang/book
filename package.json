@@ -1,42 +1,50 @@
 {
-  "devDependencies": {
-    "@rollup/plugin-commonjs": "^19.0.0",
-    "@rollup/plugin-node-resolve": "^13.0.0",
-    "ansi_up": "^5.0.1",
-    "chokidar": "^3.5.2",
-    "highlight.js": "^11.0.1",
-    "http-server": "^0.12.3",
-    "marked": "^2.1.3",
-    "misbehave": "^0.3.0",
-    "node-fetch": "^2.6.1",
-    "npm-run-all": "^4.1.5",
-    "open-graph-scraper": "^4.9.0",
-    "prismjs": "^1.24.0",
-    "rollup": "^2.52.3",
-    "rollup-plugin-terser": "^7.0.2"
-  },
   "name": "clarity-book",
   "version": "1.0.0",
   "main": "index.js",
-  "scripts": {
-    "start": "http-server ./build",
-    "dev": "run-p watch rollup-watch start",
-    "rollup": "rollup -c",
-    "rollup-watch": "rollup -c --watch",
-    "build": "rollup -c && node scripts/build.js",
-    "watch": "node scripts/watch.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "author": "Marvin Janssen",
+  "license": "CC-BY-NC-SA-4.0",
+  "homepage": "https://github.com/clarity-lang/book#readme",
+  "description": "",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/clarity-lang/book/issues"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/clarity-lang/book.git"
   },
   "keywords": [],
-  "author": "Marvin Janssen",
-  "license": "CC-BY-NC-SA-4.0",
-  "bugs": {
-    "url": "https://github.com/clarity-lang/book/issues"
+  "scripts": {
+    "start": "serve ./build",
+    "dev": "run-p watch rollup-watch start",
+    "rollup": "rollup -c",
+    "rollup-watch": "rollup -c --watch",
+    "build": "rollup -c && node scripts/build.js",
+    "watch": "node scripts/watch.js",
+    "test": "vitest run",
+    "test:report": "vitest run -- --coverage --costs",
+    "test:watch": "chokidar \"tests/**/*.ts\" \"contracts/**/*.clar\" -c \"npm run test:report\"",
+    "test:counter": "vitest run -- --manifest projects/counter/Clarinet.toml"
   },
-  "homepage": "https://github.com/clarity-lang/book#readme",
-  "description": ""
+  "devDependencies": {
+    "@hirosystems/clarinet-sdk": "^2.8.0-beta1",
+    "@hirosystems/clarinet-sdk-browser": "^2.8.0-beta1",
+    "@hirosystems/clarinet-sdk-wasm-browser": "^2.8.0-beta1",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@stacks/transactions": "^6.15.0",
+    "chokidar": "^3.5.2",
+    "http-server": "^14.1.1",
+    "marked": "^2.1.3",
+    "misbehave": "^0.3.0",
+    "npm-run-all": "^4.1.5",
+    "prismjs": "^1.24.0",
+    "rollup": "^4.17.2",
+    "serve": "^14.2.3",
+    "vite": "^5.1.4",
+    "vitest": "^1.3.1",
+    "vitest-environment-clarinet": "^2.0.0"
+  }
 }
