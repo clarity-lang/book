@@ -105,7 +105,7 @@ function is thus implemented as follows:
 ```Clarity,{"nonplayable":true}
 (define-public (lock (new-beneficiary principal) (unlock-at uint) (amount uint))
 	(begin
-		(asserts! (is-eq tx-sender contract-owner) err-owner-only)
+		(asserts! (is-eq contract-caller contract-owner) err-owner-only)
 		(asserts! (is-none (var-get beneficiary)) err-already-locked)
 		(asserts! (> unlock-at block-height) err-unlock-in-past)
 		(asserts! (> amount u0) err-no-value)
@@ -124,16 +124,16 @@ principal of the contract.
 
 ### Implementing bestow
 
-The `bestow` function will be straightforward. It checks if the `tx-sender` is
+The `bestow` function will be straightforward. It checks if the `contract-caller` is
 the current beneficiary, and if so, will update the beneficiary to the passed
 principal. One side-note to keep in mind is that the principal is stored as an
-`(optional principal)`. We thus need to wrap the `tx-sender` in a `(some ...)`
+`(optional principal)`. We thus need to wrap the `contract-caller` in a `(some ...)`
 before we do the comparison.
 
 ```Clarity,{"nonplayable":true}
 (define-public (bestow (new-beneficiary principal))
 	(begin
-		(asserts! (is-eq (some tx-sender) (var-get beneficiary)) err-beneficiary-only)
+		(asserts! (is-eq (some contract-caller) (var-get beneficiary)) err-beneficiary-only)
 		(var-set beneficiary (some new-beneficiary))
 		(ok true)
 	)
@@ -142,13 +142,13 @@ before we do the comparison.
 
 ### Implementing claim
 
-Finally, the `claim` function should check if both the `tx-sender` is the
+Finally, the `claim` function should check if both the `contract-caller` is the
 beneficiary and that the unlock height has been reached.
 
 ```Clarity,{"nonplayable":true}
 (define-public (claim)
 	(begin
-		(asserts! (is-eq (some tx-sender) (var-get beneficiary)) err-beneficiary-only)
+		(asserts! (is-eq (some contract-caller) (var-get beneficiary)) err-beneficiary-only)
 		(asserts! (>= block-height (var-get unlock-height)) err-unlock-height-not-reached)
 		(as-contract (stx-transfer? (stx-get-balance tx-sender) tx-sender (unwrap-panic (var-get beneficiary))))
 	)
@@ -273,11 +273,16 @@ Clarinet.test({
     const beneficiary = accounts.get("wallet_1")!;
     const amount = 10;
     const block = chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(10),
-        types.uint(amount),
-      ], deployer.address),
+      Tx.contractCall(
+        "timelocked-wallet",
+        "lock",
+        [
+          types.principal(beneficiary.address),
+          types.uint(10),
+          types.uint(amount),
+        ],
+        deployer.address
+      ),
     ]);
 
     // The lock should be successful.
@@ -286,7 +291,7 @@ Clarinet.test({
     block.receipts[0].events.expectSTXTransferEvent(
       amount,
       deployer.address,
-      `${deployer.address}.timelocked-wallet`,
+      `${deployer.address}.timelocked-wallet`
     );
   },
 });
@@ -297,11 +302,12 @@ Clarinet.test({
     const accountA = accounts.get("wallet_1")!;
     const beneficiary = accounts.get("wallet_2")!;
     const block = chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(10),
-        types.uint(10),
-      ], accountA.address),
+      Tx.contractCall(
+        "timelocked-wallet",
+        "lock",
+        [types.principal(beneficiary.address), types.uint(10), types.uint(10)],
+        accountA.address
+      ),
     ]);
 
     // Should return err-owner-only (err u100).
@@ -316,16 +322,26 @@ Clarinet.test({
     const beneficiary = accounts.get("wallet_1")!;
     const amount = 10;
     const block = chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(10),
-        types.uint(amount),
-      ], deployer.address),
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(10),
-        types.uint(amount),
-      ], deployer.address),
+      Tx.contractCall(
+        "timelocked-wallet",
+        "lock",
+        [
+          types.principal(beneficiary.address),
+          types.uint(10),
+          types.uint(amount),
+        ],
+        deployer.address
+      ),
+      Tx.contractCall(
+        "timelocked-wallet",
+        "lock",
+        [
+          types.principal(beneficiary.address),
+          types.uint(10),
+          types.uint(amount),
+        ],
+        deployer.address
+      ),
     ]);
 
     // The first lock worked and STX were transferred.
@@ -333,7 +349,7 @@ Clarinet.test({
     block.receipts[0].events.expectSTXTransferEvent(
       amount,
       deployer.address,
-      `${deployer.address}.timelocked-wallet`,
+      `${deployer.address}.timelocked-wallet`
     );
 
     // The second lock fails with err-already-locked (err u101).
@@ -356,11 +372,16 @@ Clarinet.test({
     chain.mineEmptyBlockUntil(targetBlockHeight + 1);
 
     const block = chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(targetBlockHeight),
-        types.uint(amount),
-      ], deployer.address),
+      Tx.contractCall(
+        "timelocked-wallet",
+        "lock",
+        [
+          types.principal(beneficiary.address),
+          types.uint(targetBlockHeight),
+          types.uint(amount),
+        ],
+        deployer.address
+      ),
     ]);
 
     // The second lock fails with err-unlock-in-past (err u102).
@@ -386,14 +407,18 @@ Clarinet.test({
     const beneficiary = accounts.get("wallet_1")!;
     const newBeneficiary = accounts.get("wallet_2")!;
     const block = chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(10),
-        types.uint(10),
-      ], deployer.address),
-      Tx.contractCall("timelocked-wallet", "bestow", [
-        types.principal(newBeneficiary.address),
-      ], beneficiary.address),
+      Tx.contractCall(
+        "timelocked-wallet",
+        "lock",
+        [types.principal(beneficiary.address), types.uint(10), types.uint(10)],
+        deployer.address
+      ),
+      Tx.contractCall(
+        "timelocked-wallet",
+        "bestow",
+        [types.principal(newBeneficiary.address)],
+        beneficiary.address
+      ),
     ]);
 
     // Both results are (ok true).
@@ -402,30 +427,36 @@ Clarinet.test({
 });
 
 Clarinet.test({
-  name:
-    "Does not allow anyone else to bestow the right to claim to someone else (not even the contract owner)",
+  name: "Does not allow anyone else to bestow the right to claim to someone else (not even the contract owner)",
   async fn(chain: Chain, accounts: Map<string, Account>) {
     const deployer = accounts.get("deployer")!;
     const beneficiary = accounts.get("wallet_1")!;
     const accountA = accounts.get("wallet_3")!;
     const block = chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(10),
-        types.uint(10),
-      ], deployer.address),
-      Tx.contractCall("timelocked-wallet", "bestow", [
-        types.principal(deployer.address),
-      ], deployer.address),
-      Tx.contractCall("timelocked-wallet", "bestow", [
-        types.principal(accountA.address),
-      ], accountA.address),
+      Tx.contractCall(
+        "timelocked-wallet",
+        "lock",
+        [types.principal(beneficiary.address), types.uint(10), types.uint(10)],
+        deployer.address
+      ),
+      Tx.contractCall(
+        "timelocked-wallet",
+        "bestow",
+        [types.principal(deployer.address)],
+        deployer.address
+      ),
+      Tx.contractCall(
+        "timelocked-wallet",
+        "bestow",
+        [types.principal(accountA.address)],
+        accountA.address
+      ),
     ]);
 
     // All but the first call fails with err-beneficiary-only (err u104).
-    block.receipts.slice(1).map(({ result }) =>
-      result.expectErr().expectUint(104)
-    );
+    block.receipts
+      .slice(1)
+      .map(({ result }) => result.expectErr().expectUint(104));
   },
 });
 ```
@@ -437,19 +468,23 @@ that only the beneficiary can claim.
 
 ```typescript
 Clarinet.test({
-  name:
-    "Allows the beneficiary to claim the balance when the block-height is reached",
+  name: "Allows the beneficiary to claim the balance when the block-height is reached",
   async fn(chain: Chain, accounts: Map<string, Account>) {
     const deployer = accounts.get("deployer")!;
     const beneficiary = accounts.get("wallet_1")!;
     const targetBlockHeight = 10;
     const amount = 10;
     chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(targetBlockHeight),
-        types.uint(amount),
-      ], deployer.address),
+      Tx.contractCall(
+        "timelocked-wallet",
+        "lock",
+        [
+          types.principal(beneficiary.address),
+          types.uint(targetBlockHeight),
+          types.uint(amount),
+        ],
+        deployer.address
+      ),
     ]);
 
     // Advance the chain until the unlock height.
@@ -464,25 +499,29 @@ Clarinet.test({
     block.receipts[0].events.expectSTXTransferEvent(
       amount,
       `${deployer.address}.timelocked-wallet`,
-      beneficiary.address,
+      beneficiary.address
     );
   },
 });
 
 Clarinet.test({
-  name:
-    "Does not allow the beneficiary to claim the balance before the block-height is reached",
+  name: "Does not allow the beneficiary to claim the balance before the block-height is reached",
   async fn(chain: Chain, accounts: Map<string, Account>) {
     const deployer = accounts.get("deployer")!;
     const beneficiary = accounts.get("wallet_1")!;
     const targetBlockHeight = 10;
     const amount = 10;
     chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(targetBlockHeight),
-        types.uint(amount),
-      ], deployer.address),
+      Tx.contractCall(
+        "timelocked-wallet",
+        "lock",
+        [
+          types.principal(beneficiary.address),
+          types.uint(targetBlockHeight),
+          types.uint(amount),
+        ],
+        deployer.address
+      ),
     ]);
 
     // Advance the chain until the unlock height minus one.
@@ -499,8 +538,7 @@ Clarinet.test({
 });
 
 Clarinet.test({
-  name:
-    "Does not allow anyone else to claim the balance when the block-height is reached",
+  name: "Does not allow anyone else to claim the balance when the block-height is reached",
   async fn(chain: Chain, accounts: Map<string, Account>) {
     const deployer = accounts.get("deployer")!;
     const beneficiary = accounts.get("wallet_1")!;
@@ -508,11 +546,16 @@ Clarinet.test({
     const targetBlockHeight = 10;
     const amount = 10;
     chain.mineBlock([
-      Tx.contractCall("timelocked-wallet", "lock", [
-        types.principal(beneficiary.address),
-        types.uint(targetBlockHeight),
-        types.uint(amount),
-      ], deployer.address),
+      Tx.contractCall(
+        "timelocked-wallet",
+        "lock",
+        [
+          types.principal(beneficiary.address),
+          types.uint(targetBlockHeight),
+          types.uint(amount),
+        ],
+        deployer.address
+      ),
     ]);
 
     // Advance the chain until the unlock height.

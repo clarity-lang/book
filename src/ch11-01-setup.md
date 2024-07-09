@@ -15,7 +15,7 @@ example:
 ```Clarity,{"nonplayable":true}
 (define-public (mint (recipient principal))
 	(let ((token-id (+ (var-get token-id-nonce) u1)))
-		(asserts! (is-eq tx-sender contract-owner) err-owner-only)
+		(asserts! (is-eq contract-caller contract-owner) err-owner-only)
 		(try! (nft-mint? stacksies token-id recipient))
 		(asserts! (var-set token-id-nonce token-id) err-token-id-failure)
 		(ok token-id)
@@ -32,7 +32,7 @@ function that only the contract deployer can call.
 ```Clarity,{"nonplayable":true}
 (define-public (mint (amount uint) (recipient principal))
 	(begin
-		(asserts! (is-eq tx-sender contract-owner) err-owner-only)
+		(asserts! (is-eq contract-caller contract-owner) err-owner-only)
 		(ft-mint? amazing-coin amount recipient)
 	)
 )
@@ -55,11 +55,11 @@ learned. We also define a constant for the contract owner.
 We will then think about the various error states that exist in our marketplace.
 The act of listing an NFT may fail under a number of circumstances; namely, the
 expiry block height is in the past, or the listing price is zero (we will not
-allow free listings). Additionally, there is the possibility that a user may try 
-to list an NFT for sale without actually owning it. However, this issue will 
-be addressed by the NFT contract's built-in safeguards. You may remember that 
+allow free listings). Additionally, there is the possibility that a user may try
+to list an NFT for sale without actually owning it. However, this issue will
+be addressed by the NFT contract's built-in safeguards. You may remember that
 the built-in NFT functions fail with an
-error code if the NFT does not exist or if it is not owned by `tx-sender`. We
+error code if the NFT does not exist or if it is not owned by `contract-caller`. We
 will simply propagate those errors using
 [control flow functions](ch06-00-control-flow.md). We therefore only define two
 listing error codes:
@@ -161,7 +161,7 @@ public functions later.
 
 (define-public (set-whitelisted (asset-contract principal) (whitelisted bool))
 	(begin
-		(asserts! (is-eq contract-owner tx-sender) err-unauthorised)
+		(asserts! (is-eq contract-caller contract-owner) err-unauthorised)
 		(ok (map-set whitelisted-asset-contracts asset-contract whitelisted))
 	)
 )

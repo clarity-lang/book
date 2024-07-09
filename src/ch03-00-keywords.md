@@ -39,6 +39,12 @@ special function `as-contract` was used to shift the sending context.
 (as-contract tx-sender)
 ```
 
+Note that using `tx-sender` as a check for permission to call a contract can expose you to a vulnerability where a malicious contract could trick a user into calling it instead of the intended contract, but the `tx-sender` check would pass, since it returns the original contract caller.
+
+For example, I think I am calling contract A, but am socially engineered into calling contract b instead. Contract b then calls into contract a but passes different parameters. Any permission checks in contract A will pass since I am the original `tx-sender`.
+
+For this reason, it is recommended to instead use `contract-caller`, described below.
+
 ## contract-caller
 
 Contains the principal that called the function. It can be a standard principal
@@ -50,3 +56,7 @@ previous contract in the chain.
 ```Clarity
 contract-caller
 ```
+
+In the above example, contract A would not be vulnerable to this exploit, since a permission check using `contract-caller` would result in the malicious contract, failing the permission check.
+
+Don't worry if this isn't fully clear now. It will become clear as we go through examples in the book.

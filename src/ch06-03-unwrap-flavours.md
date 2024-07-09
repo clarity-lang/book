@@ -75,7 +75,7 @@ not. It makes working with [maps](ch04-03-maps.md) and
 			;; The magic happens here.
 			(listing (unwrap! (get-listing id) err-unknown-listing))
 		)
-		(asserts! (is-eq tx-sender (get maker listing)) err-not-the-maker)
+		(asserts! (is-eq contract-caller (get maker listing)) err-not-the-maker)
 		(map-set listings {id: id} (merge listing {name: new-name}))
 		(ok true)
 	)

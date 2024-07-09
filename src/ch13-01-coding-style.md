@@ -69,7 +69,7 @@ some prior variables.
 )
 ```
 
-### Avoid *-panic functions
+### Avoid \*-panic functions
 
 There are multiple ways to unwrap values, but `unwrap-panic` and
 `unwrap-err-panic` should generally be avoided. They abort the call with a
@@ -88,7 +88,7 @@ below.
 			;; Emits an error value when the unwrap fails.
 			(listing (unwrap! (get-listing id) err-unknown-listing))
 		)
-		(asserts! (is-eq tx-sender (get maker listing)) err-not-the-maker)
+		(asserts! (is-eq contract-caller (get maker listing)) err-not-the-maker)
 		(map-set listings {id: id} (merge listing {name: new-name}))
 		(ok true)
 	)
@@ -100,7 +100,7 @@ below.
 			;; No meaningful error code is emitted if the unwrap fails.
 			(listing (unwrap-panic (get-listing id)))
 		)
-		(asserts! (is-eq tx-sender (get maker listing)) err-not-the-maker)
+		(asserts! (is-eq contract-caller (get maker listing)) err-not-the-maker)
 		(map-set listings {id: id} (merge listing {name: new-name}))
 		(ok true)
 	)
@@ -124,7 +124,7 @@ For example:
 
 ```Clarity,{"nonplayable":true}
 (define-public (update-name (new-name (string-ascii 50)))
-	(if (is-eq tx-sender contract-owner)
+	(if (is-eq contract-caller contract-owner)
 		(ok (var-set contract-name new-name))
 		err-not-contract-owner
 	)
@@ -136,7 +136,7 @@ Can be rewritten to:
 ```Clarity,{"nonplayable":true}
 (define-public (update-name (new-name (string-ascii 50)))
 	(begin
-		(asserts! (is-eq tx-sender contract-owner) err-not-contract-owner)
+		(asserts! (is-eq contract-caller contract-owner) err-not-contract-owner)
 		(ok (var-set contract-name new-name))
 	)
 )
@@ -200,7 +200,7 @@ Here is a real transfer function found in a mainnet contract:
 
 ```Clarity,{"nonplayable":true}
 (define-public (transfer (token-id uint) (sender principal) (recipient principal))
-	(if (and (is-eq tx-sender sender))
+	(if (and (is-eq contract-caller sender))
 		(match (nft-transfer? my-nft token-id sender recipient)
 			success (ok success)
 			error (err error))
@@ -214,7 +214,7 @@ Refactoring the `if` and `match`, we are left with just this:
 ```Clarity,{"nonplayable":true}
 (define-public (transfer (token-id uint) (sender principal) (recipient principal))
 	(begin
-		(asserts! (is-eq tx-sender sender) (err u500))
+		(asserts! (is-eq contract-caller sender) (err u500))
 		(nft-transfer? my-nft token-id sender recipient)
 	)
 )
