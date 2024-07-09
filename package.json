@@ -28,9 +28,9 @@
     "test:counter": "vitest run -- --manifest projects/counter/Clarinet.toml"
   },
   "devDependencies": {
-    "@hirosystems/clarinet-sdk": "^2.6.0",
-    "@hirosystems/clarinet-sdk-browser": "^2.7.0-beta5",
-    "@hirosystems/clarinet-sdk-wasm-browser": "^2.7.0-beta6",
+    "@hirosystems/clarinet-sdk": "^2.8.0-beta1",
+    "@hirosystems/clarinet-sdk-browser": "^2.8.0-beta1",
+    "@hirosystems/clarinet-sdk-wasm-browser": "^2.8.0-beta1",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
