@@ -88,7 +88,7 @@ reference. The rest can be read from the data map.
 		(listing (unwrap! (map-get? listings listing-id) err-unknown-listing))
 		(maker (get maker listing))
 		)
-		(asserts! (is-eq maker tx-sender) err-unauthorised)
+		(asserts! (is-eq maker contract-caller) err-unauthorised)
 		(asserts! (is-eq (get nft-asset-contract listing) (contract-of nft-asset-contract)) err-nft-asset-mismatch)
 		(map-delete listings listing-id)
 		(as-contract (transfer-nft nft-asset-contract (get token-id listing) tx-sender maker))

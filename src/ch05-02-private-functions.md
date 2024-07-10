@@ -9,7 +9,7 @@ similar expressions in multiple locations, then it is worth considering turning
 those expressions into a separate private function.
 
 The contract bellow allows only the contract owner to update the `recipients`
-map via two public functions. Instead of having to repeat the `tx-sender` check,
+map via two public functions. Instead of having to repeat the `contract-caller` check,
 it is _abstracted away_ to its own private function called `is-valid-caller`.
 
 ```Clarity
@@ -24,7 +24,7 @@ it is _abstracted away_ to its own private function called `is-valid-caller`.
 (define-map recipients principal uint)
 
 (define-private (is-valid-caller)
-	(is-eq contract-owner tx-sender)
+	(is-eq contract-owner contract-caller)
 )
 
 (define-public (add-recipient (recipient principal) (amount uint))
@@ -54,7 +54,7 @@ number of smaller private functions can alleviate these issues.
 Private functions may return any type, including responses, although returning
 an `ok` or an `err` will have no effect on the materialised state of the chain.
 
-```Clarity,{"validation_code":"(asserts! (not (is-valid-caller tx-sender)) \"That does not seem right, try again...\")\n(asserts! (is-valid-caller 'ST20ATRN26N9P05V2F1RHFRV24X8C8M3W54E427B2) \"Almost there, try again!\")","hint": "Write a private function called 'is-valid-caller' that returns true or false based on whether the tx-sender is one of the authorised principals."}
+```Clarity,{"validation_code":"(asserts! (not (is-valid-caller contract-caller)) "That does not seem right, try again...")\n(asserts! (is-valid-caller 'ST20ATRN26N9P05V2F1RHFRV24X8C8M3W54E427B2) "Almost there, try again!")","hint": "Write a private function called 'is-valid-caller' that returns true or false based on whether the contract-caller is one of the authorised principals."}
 (define-constant err-invalid-caller (err u1))
 
 (define-map authorised-callers principal bool)
@@ -68,7 +68,7 @@ an `ok` or an `err` will have no effect on the materialised state of the chain.
 )
 
 (define-public (delete-recipient (recipient principal))
-	(if (is-valid-caller tx-sender)
+	(if (is-valid-caller contract-caller)
 		(ok (map-delete recipients recipient))
 		err-invalid-caller
 	)
