@@ -27,8 +27,8 @@ and listing tuple as parameters in order to validate all conditions.
 ```Clarity,{"nonplayable":true}
 (define-private (assert-can-fulfil (nft-asset-contract principal) (payment-asset-contract (optional principal)) (listing {maker: principal, taker: (optional principal), token-id: uint, nft-asset-contract: principal, expiry: uint, price: uint, payment-asset-contract: (optional principal)}))
 	(begin
-		(asserts! (not (is-eq (get maker listing) tx-sender)) err-maker-taker-equal)
-		(asserts! (match (get taker listing) intended-taker (is-eq intended-taker tx-sender) true) err-unintended-taker)
+		(asserts! (not (is-eq (get maker listing) contract-caller)) err-maker-taker-equal)
+		(asserts! (match (get taker listing) intended-taker (is-eq intended-taker contract-caller) true) err-unintended-taker)
 		(asserts! (< block-height (get expiry listing)) err-listing-expired)
 		(asserts! (is-eq (get nft-asset-contract listing) nft-asset-contract) err-nft-asset-mismatch)
 		(asserts! (is-eq (get payment-asset-contract listing) payment-asset-contract) err-payment-asset-mismatch)

@@ -105,7 +105,7 @@ function is thus implemented as follows:
 ```Clarity,{"nonplayable":true}
 (define-public (lock (new-beneficiary principal) (unlock-at uint) (amount uint))
 	(begin
-		(asserts! (is-eq tx-sender contract-owner) err-owner-only)
+		(asserts! (is-eq contract-caller contract-owner) err-owner-only)
 		(asserts! (is-none (var-get beneficiary)) err-already-locked)
 		(asserts! (> unlock-at block-height) err-unlock-in-past)
 		(asserts! (> amount u0) err-no-value)
@@ -124,16 +124,16 @@ principal of the contract.
 
 ### Implementing bestow
 
-The `bestow` function will be straightforward. It checks if the `tx-sender` is
+The `bestow` function will be straightforward. It checks if the `contract-caller` is
 the current beneficiary, and if so, will update the beneficiary to the passed
 principal. One side-note to keep in mind is that the principal is stored as an
-`(optional principal)`. We thus need to wrap the `tx-sender` in a `(some ...)`
+`(optional principal)`. We thus need to wrap the `contract-caller` in a `(some ...)`
 before we do the comparison.
 
 ```Clarity,{"nonplayable":true}
 (define-public (bestow (new-beneficiary principal))
 	(begin
-		(asserts! (is-eq (some tx-sender) (var-get beneficiary)) err-beneficiary-only)
+		(asserts! (is-eq (some contract-caller) (var-get beneficiary)) err-beneficiary-only)
 		(var-set beneficiary (some new-beneficiary))
 		(ok true)
 	)
@@ -142,13 +142,13 @@ before we do the comparison.
 
 ### Implementing claim
 
-Finally, the `claim` function should check if both the `tx-sender` is the
+Finally, the `claim` function should check if both the `contract-caller` is the
 beneficiary and that the unlock height has been reached.
 
 ```Clarity,{"nonplayable":true}
 (define-public (claim)
 	(begin
-		(asserts! (is-eq (some tx-sender) (var-get beneficiary)) err-beneficiary-only)
+		(asserts! (is-eq (some contract-caller) (var-get beneficiary)) err-beneficiary-only)
 		(asserts! (>= block-height (var-get unlock-height)) err-unlock-height-not-reached)
 		(as-contract (stx-transfer? (stx-get-balance tx-sender) tx-sender (unwrap-panic (var-get beneficiary))))
 	)

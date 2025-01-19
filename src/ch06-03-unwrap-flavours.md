@@ -5,7 +5,7 @@ in a slightly different manner.
 
 `unwrap!` takes an `optional` or `response` as the first input and a throw value
 as the second input. It follows the same unwrapping behaviour of `try!` , but
-instead of propagating the the `none` or the `err` it will return the the throw
+instead of propagating the `none` or the `err` it will return the the throw
 value instead.
 
 ```Clarity
@@ -75,7 +75,7 @@ not. It makes working with [maps](ch04-03-maps.md) and
 			;; The magic happens here.
 			(listing (unwrap! (get-listing id) err-unknown-listing))
 		)
-		(asserts! (is-eq tx-sender (get maker listing)) err-not-the-maker)
+		(asserts! (is-eq contract-caller (get maker listing)) err-not-the-maker)
 		(map-set listings {id: id} (merge listing {name: new-name}))
 		(ok true)
 	)

@@ -47,7 +47,7 @@ and `nft-burn?` to manage the NFT.
 Click the play button on the example above or copy it to the REPL to see the NFT
 events emitted for each function. Try defining and minting multiple NFTs, doing
 transfers and burns. Like the others, these functions are safe by design. It is
-not possible to transfer NFTs a principal does does not own, minting an NFT with
+not possible to transfer NFTs a principal does not own, minting an NFT with
 the same ID twice, and burning tokens that do not exist.
 
 ### Project setup
@@ -178,12 +178,12 @@ The `get-owner` function only has to wrap the built-in `nft-get-owner?`.
 #### transfer
 
 The `transfer` function should assert that the `sender` is equal to the
-`tx-sender` to prevent principals from transferring tokens they do not own.
+`contract-caller` to prevent principals from transferring tokens they do not own.
 
 ```Clarity,{"nonplayable":true}
 (define-public (transfer (token-id uint) (sender principal) (recipient principal))
 	(begin
-		(asserts! (is-eq tx-sender sender) err-not-token-owner)
+		(asserts! (is-eq contract-caller sender) err-not-token-owner)
 		(nft-transfer? stacksies token-id sender recipient)
 	)
 )
@@ -192,7 +192,7 @@ The `transfer` function should assert that the `sender` is equal to the
 #### mint
 
 We will also add a convenience function to mint new tokens. A simple guard to
-check if the `tx-sender` is equal to the `contract-owner` constant will prevent
+check if the `contract-caller` is equal to the `contract-owner` constant will prevent
 others from minting new tokens. The function will increment the last token ID
 and then mint a new token for the recipient.
 
@@ -202,7 +202,7 @@ and then mint a new token for the recipient.
 		(
 			(token-id (+ (var-get last-token-id) u1))
 		)
-		(asserts! (is-eq tx-sender contract-owner) err-owner-only)
+		(asserts! (is-eq contract-caller contract-owner) err-owner-only)
 		(try! (nft-mint? stacksies token-id recipient))
 		(var-set last-token-id token-id)
 		(ok token-id)

@@ -5,13 +5,13 @@ integers_, _booleans_, and _principals_.
 
 ### Signed integers
 
-`int`, short for _(signed) integer_. These are 128 bits numbers that can either
+`int`, short for _(signed) integer_. These are 128-bit numbers that can either
 be positive or negative. The minimum value is -2^127 and the maximum value is
 2^127 - 1. Some examples: `0`, `5000`, `-45`.
 
 ### Unsigned integers
 
-`uint`, short for _unsigned integer_. These are 128 bits numbers that can only
+`uint`, short for _unsigned integer_. These are 128-bit numbers that can only
 be positive. The minimum value is therefore 0 and the maximum value is
 2^128 - 1. **Unsigned integers are always prefixed by the character `u`.** Some
 examples: `u0`, `u40935094534`.
@@ -125,7 +125,7 @@ a contract.
 (stx-get-balance 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.my-contract)
 ```
 
-Zero balances are a little boring, so let us send some some STX to a principal:
+Zero balances are a little boring, so let us send some STX to a principal:
 
 ```Clarity,{"setup":["::mint_stx ST000000000000000000002AMW42H 1000000"]}
 (stx-transfer? u500 tx-sender 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE)
