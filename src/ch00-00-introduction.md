@@ -181,18 +181,30 @@ you can use Bitcoin transactions as a trigger in your smart contracts! Clarity
 also features a number of built-in functions to verify secp256k1 signatures and
 recover keys.
 
-[^1]: The note on feasibility was added for correctness. Blockchains are
-designed to be highly resistant to change but there have been cases of rewrites.
-Weaker chains can be susceptible to so-called "51% attacks" that allow a
-powerful miner to rewrite that chain's history. On the other hand, influential
-factions may mandate a node upgrade that changes chain history by means of a
-hard fork. For example, the Ethereum Foundation "solved" the problem of the DAO
-hack with a hard fork.
+### Clarity version history
 
-[^2]: Although this characteristic makes it a lot easier to read Clarity smart
-contracts, it does not necessarily make it easy. A good grasp of Clarity is
-still required, but one can argue that it is still a lot better than a
-conventional paper contract written in legalese, which quite honestly can be
-considered a language in its own right. The actual difference is that Clarity
-permits only one interpretation, something that definitely cannot be said for
-legalese.
+The following table shows the version history of Clarity.
+
+| Activation Bitcoin Block | Version Number | Description of change                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------ | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 666050                   | Clarity 1      | First version                                                                                                                                                                                                                                                                                                                                                     |
+| 781551                   | Clarity 2      | Bugs fixes and new native functions and global variables that improve its support for interacting with off-chain services and blockchains, especially Bitcoin. See [SIP-015](https://github.com/stacksgov/sips/blob/main/sips/sip-015/sip-015-network-upgrade.md) and [SIP-020](https://github.com/stacksgov/sips/blob/main/sips/sip-020/sip-020-bitwise-ops.md). |
+| 867867                   | Clarity 3      | Updates to support Stacks 3.0 blocks (Nakamoto). See [SIP-021](https://github.com/stacksgov/sips/blob/main/sips/sip-021/sip-021-nakamoto.md)                                                                                                                                                                                                                      |
+
+[^1]:
+    The note on feasibility was added for correctness. Blockchains are
+    designed to be highly resistant to change but there have been cases of rewrites.
+    Weaker chains can be susceptible to so-called "51% attacks" that allow a
+    powerful miner to rewrite that chain's history. On the other hand, influential
+    factions may mandate a node upgrade that changes chain history by means of a
+    hard fork. For example, the Ethereum Foundation "solved" the problem of the DAO
+    hack with a hard fork.
+
+[^2]:
+    Although this characteristic makes it a lot easier to read Clarity smart
+    contracts, it does not necessarily make it easy. A good grasp of Clarity is
+    still required, but one can argue that it is still a lot better than a
+    conventional paper contract written in legalese, which quite honestly can be
+    considered a language in its own right. The actual difference is that Clarity
+    permits only one interpretation, something that definitely cannot be said for
+    legalese.
