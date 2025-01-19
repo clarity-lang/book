@@ -161,7 +161,7 @@ be deployed on the network. Other languages like Solidity permit the use of low
 level calls without requiring the return value to be checked. For example, a
 token transfer can fail silently if the developer forgets to check the result.
 In Clarity it is not possible to ignore errors, although that obviously does
-prevent buggy error handling on behalf of the developer. Responses and error
+not prevent buggy error handling on behalf of the developer. Responses and error
 handling are covered extensively in the chapters on
 [functions](ch05-00-functions.md) and [control flow](ch06-00-control-flow.md).
 

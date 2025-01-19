@@ -97,14 +97,14 @@ two error codes:
 #### transfer
 
 The `transfer` function should assert that the `sender` is equal to the
-`tx-sender` to prevent principals from transferring tokens they do not own. It
+`contract-caller` to prevent principals from transferring tokens they do not own. It
 should also unwrap and print the `memo` if it is not `none`. We use `match` to
 conditionally call `print` if the passed `memo` is a `some`.
 
 ```Clarity,{"nonplayable":true}
 (define-public (transfer (amount uint) (sender principal) (recipient principal) (memo (optional (buff 34))))
 	(begin
-		(asserts! (is-eq tx-sender sender) err-not-token-owner)
+		(asserts! (is-eq contract-caller sender) err-not-token-owner)
 		(try! (ft-transfer? clarity-coin amount sender recipient))
 		(match memo to-print (print to-print) 0x)
 		(ok true)
@@ -196,7 +196,7 @@ that only the contract deployer can successfully call.
 ```Clarity,{"nonplayable":true}
 (define-public (mint (amount uint) (recipient principal))
 	(begin
-		(asserts! (is-eq tx-sender contract-owner) err-owner-only)
+		(asserts! (contract-caller contract-owner) err-owner-only)
 		(ft-mint? clarity-coin amount recipient)
 	)
 )

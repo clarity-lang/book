@@ -55,7 +55,7 @@ name—that certain values are what you expect them to be.
 
 Remember that `is-valid-caller` function in the
 [chapter on private functions](ch05-02-private-functions.md)? The example used
-an `if` function to only allow the action if the `tx-sender` was equal to the
+an `if` function to only allow the action if the `contract-caller` was equal to the
 principal that deployed the contract. Let us now rewrite that contract to use
 `asserts!` instead:
 
@@ -71,12 +71,12 @@ principal that deployed the contract. Let us now rewrite that contract to use
 (define-map recipients principal uint)
 
 (define-private (is-valid-caller)
-	(is-eq contract-owner tx-sender)
+	(is-eq contract-owner contract-caller)
 )
 
 (define-public (add-recipient (recipient principal) (amount uint))
 	(begin
-		;; Assert the tx-sender is valid.
+		;; Assert the contract-caller is valid.
 		(asserts! (is-valid-caller) err-invalid-caller)
 		(ok (map-set recipients recipient amount))
 	)
@@ -84,7 +84,7 @@ principal that deployed the contract. Let us now rewrite that contract to use
 
 (define-public (delete-recipient (recipient principal))
 	(begin
-		;; Assert the tx-sender is valid.
+		;; Assert the contract-caller is valid.
 		(asserts! (is-valid-caller) err-invalid-caller)
 		(ok (map-delete recipients recipient))
 	)
