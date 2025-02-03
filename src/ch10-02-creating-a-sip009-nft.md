@@ -151,19 +151,14 @@ NFT. Our practice NFT does not have a website so we can return `none`.
 )
 ```
 
-However, even if we did have a website, there are a few challenges to
-implementing this seemingly straightforward function. Usually, these functions
-return a base URL with the token ID stuck behind it. The current version of
-Clarity (2.0) does not feature a intuitive way to do this. Something like the
-following is impossible because there is no `to-ascii` function to turn a number
-into an ASCII string type.
+If we did have a website, we could append the `token-id` to a URL prefix to
+generate the complete URL:
 
 ```Clarity,{"nonplayable":true}
-(concat "https://domain.tld/metadata/" (to-ascii token-id))
+(define-read-only (get-token-uri (token-id uint))
+  (ok (concat "https://domain.tld/metadata/" (int-to-ascii token-id)))
+)
 ```
-
-It does not mean that turning a number into a string cannot be done. It is just
-way more strenuous than it should be. Clarity 2.1 will solve the issue.
 
 #### get-owner
 
