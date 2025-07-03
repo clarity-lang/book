@@ -28,5 +28,5 @@ emulator.
 
 ```bash
 % clarinet --version
-clarinet-cli 2.6.0
+clarinet-cli 3.2.0
 ```

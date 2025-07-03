@@ -55,8 +55,8 @@ To install Clarinet from pre-built binaries, download the latest release from th
 Unzip the binary, then copy it to a location that is already in your path, such as `/usr/local/bin`.
 
 ```sh
-# note: you can change v2.6.0 with the latest version available on the releases page.
-wget -nv https://github.com/hirosystems/clarinet/releases/download/v2.6.0/clarinet-linux-x64-glibc.tar.gz -O clarinet-linux-x64.tar.gz
+# note: you can change v3.2.0 with the latest version available on the releases page.
+wget -nv https://github.com/hirosystems/clarinet/releases/download/v3.2.0/clarinet-linux-x64-glibc.tar.gz -O clarinet-linux-x64.tar.gz
 tar -xf clarinet-linux-x64.tar.gz
 chmod +x ./clarinet
 mv ./clarinet /usr/local/bin
@@ -111,7 +111,7 @@ your favourite Terminal emulator.
 
 ```bash
 % clarinet --version
-clarinet-cli 2.6.0
+clarinet-cli 3.2.0
 ```
 
 More information about Clarinet: [https://github.com/hirosystems/clarinet/blob/develop/README.md](https://github.com/hirosystems/clarinet/blob/develop/README.md)
