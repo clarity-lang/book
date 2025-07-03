@@ -31,7 +31,6 @@ let simnet = null;
  */
 onmessage = (e) => {
   const { action, data } = e.data;
-  console.log("message from client", action, data);
   if (action === "init") {
     initClarinetSDK(data);
   } else if (action === "deployContract") {
