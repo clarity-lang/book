@@ -24,7 +24,7 @@ fs.readFile(path.resolve(__dirname, '../templates/base.html'), 'utf8').then(
       );
       const file_path = absolute_path.substring(input_path.length);
       const output_file_path = path.join(output_path, file_path);
-      if (absolute_path.substr(-3) !== '.md')
+      if (!absolute_path.endsWith('.md'))
         return fs.copyFile(absolute_path, output_file_path);
       console.log(`Rebuilding ${file_path}`);
       fs.writeFile(
