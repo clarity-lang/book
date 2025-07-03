@@ -9,7 +9,7 @@ Detailed information about sBTC are available at [stacks.co](https://docs.stacks
 
 ### Unit tests with sBTC
 
-The following function mints sBTC to the provided address. It uses clarigen types. Therefore, it is requires
+The following function mints sBTC to the provided address. It uses clarigen types. Therefore, it requires
 
 ```typescript
 export function mineSbtc(recipient: string) {
