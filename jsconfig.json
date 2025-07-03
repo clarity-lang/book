@@ -3,5 +3,5 @@
     "checkJs": true,
     "strict": false
   },
-  "include": ["lib/**/*.js"]
+  "include": ["lib/**/*.js", "public/clarinet-worker.js"]
 }

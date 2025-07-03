@@ -28,23 +28,25 @@
     "test:counter": "vitest run -- --manifest projects/counter/Clarinet.toml"
   },
   "devDependencies": {
-    "@hirosystems/clarinet-sdk": "^2.8.0-beta1",
-    "@hirosystems/clarinet-sdk-browser": "^2.8.0-beta1",
-    "@hirosystems/clarinet-sdk-wasm-browser": "^2.8.0-beta1",
-    "@rollup/plugin-commonjs": "^25.0.7",
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@rollup/plugin-terser": "^0.4.4",
-    "@stacks/transactions": "^6.15.0",
-    "chokidar": "^3.5.2",
-    "http-server": "^14.1.1",
-    "marked": "^2.1.3",
-    "misbehave": "^0.3.0",
-    "npm-run-all": "^4.1.5",
-    "prismjs": "^1.24.0",
-    "rollup": "^4.17.2",
-    "serve": "^14.2.3",
-    "vite": "^5.1.4",
-    "vitest": "^1.3.1",
-    "vitest-environment-clarinet": "^2.0.0"
+    "@hirosystems/clarinet-sdk": "3.2.0",
+    "@hirosystems/clarinet-sdk-browser": "3.2.0",
+    "@rollup/plugin-commonjs": "28.0.6",
+    "@rollup/plugin-node-resolve": "16.0.1",
+    "@rollup/plugin-terser": "0.4.4",
+    "@stacks/transactions": "7.1.0",
+    "chokidar": "4.0.3",
+    "http-server": "14.1.1",
+    "marked": "16.0.0",
+    "misbehave": "0.3.0",
+    "npm-run-all": "4.1.5",
+    "prismjs": "1.30.0",
+    "rollup": "4.44.1",
+    "serve": "14.2.4",
+    "vite": "7.0.0",
+    "vitest": "3.2.4",
+    "vitest-environment-clarinet": "2.3.0"
+  },
+  "dependencies": {
+    "marked-highlight": "^2.2.2"
   }
 }
