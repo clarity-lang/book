@@ -9,7 +9,7 @@ Fungible tokens can also easily be defined using built-in functions. The
 counterpart for fungible tokens is the `define-fungible-token` function. Just
 like NFTs, fungible tokens have a unique asset name per contract.
 
-```Clarity,{"nonplayable",true}
+```Clarity,{"nonplayable":true}
 (define-fungible-token asset-name maximum-supply)
 ```
 

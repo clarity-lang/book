@@ -103,15 +103,15 @@ guards in place.
 ### Implementing vote
 
 The vote function is even more straightforward. All we have to do is make sure
-the `contract-caller` is one of the members. We can do that by checking if the
-`contract-caller` is present in the members list by using the built-in `index-of`
+the `tx-sender` is one of the members. We can do that by checking if the
+`tx-sender` is present in the members list by using the built-in `index-of?`
 function. It returns an [optional](ch02-03-composite-types.md#optionals) type,
 so we can simply check if it returns a `(some ...)`, rather than a `none`.
 
 ```Clarity,{"nonplayable":true}
 (define-public (vote (recipient principal) (decision bool))
 	(begin
-		(asserts! (is-some (index-of (var-get members) contract-caller)) err-not-a-member)
+		(asserts! (is-some (index-of? (var-get members) tx-sender)) err-not-a-member)
 		(ok (map-set votes {member: tx-sender, recipient: recipient} {decision: decision}))
 	)
 )
