@@ -21,7 +21,7 @@ counter contract called `counter.test.ts`. Depending on the version of Clarinet
 you are using, it should have added some imports and template code to the test
 file. You may remove the template code but make sure you leave the `import`
 statements intact.
-
+We're also going to be using the `accounts` constant, so make sure you leave the `const accounts = simnet.getAccounts();` in place as well.
 Tests are defined using the `test()` or `it()` function. They have a name, which is
 used as a description, and a callback function that is executed on test. Before
 each test commences, Clarinet will instantiate a fresh local chain and then run
