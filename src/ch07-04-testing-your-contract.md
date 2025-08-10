@@ -126,7 +126,9 @@ overview.
 Although the two tests we have written cover all code paths in our smart
 contract, it makes sense to add another test that explicitly tests the
 multiplayer aspect of our contract.
+Note we are using the `test` function here, so make sure that is imported at the top of the file with the other imports.
 
+We also need to import the `Cl` package which allows us to work with Clarity values: `import { Cl } from "@stacks/transactions";`
 ```typescript
 test("counters are specific to the tx-sender", () => {
   // Get some accounts.
