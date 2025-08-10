@@ -89,7 +89,11 @@ and tricks in the chapter on [best practices](ch14-00-best-practices.md).)
 The smart-claimant does not care for what reason the time-locked wallet would
 error out. We therefore only need to consider the state of a successful
 transfer.
+If you haven't yet, be sure to run `npm install` and add the necessary imports.
 
+```javascript
+import { describe, expect, test } from "vitest";
+import { Cl } from "@stacks/transactions";
 ```typescript
 import { Cl } from "@stacks/transactions";
 import { expect, test } from "vitest";
