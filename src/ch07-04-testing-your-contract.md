@@ -74,7 +74,7 @@ test("get-count returns u0 for principals that never called count-up before", ()
   expect(incrementResponse.result).toBeUint(0);
 });
 ```
-
+Make sure you have everything installed by running `npm install`.
 We are now ready to execute the test using `npm test`. If everything went
 well, our test should pass with a "passed" status.
 
