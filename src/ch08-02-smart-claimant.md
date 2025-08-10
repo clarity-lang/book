@@ -137,7 +137,7 @@ test("Disburses tokens once it can claim the time-locked wallet balance", () => 
   expect(claimResponse.events).toHaveLength(5);
   expect(
     claimResponse.events.every((event) => event.event === "stx_transfer_event")
-  ).true;
+  ).toBe(true);
 
   const eventsData = claimResponse.events.map((x) => x.data);
 
