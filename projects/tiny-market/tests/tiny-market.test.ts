@@ -433,7 +433,7 @@ describe("Intended taker", () => {
     });
   });
 
-  test('"Unintended taker cannot fulfill active listing""', () => {
+  test('Unintended taker cannot fulfill active listing', () => {
     simnet.callPublicFn(
       defaultNftAssetContract,
       "mint",
