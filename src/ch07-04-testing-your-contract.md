@@ -118,7 +118,7 @@ test("count-up counts up for the tx-sender", () => {
 The contract call transactions are constructed using the `simnet.callPublicFn()`.
 The Clarinet TypeScript library provides a lot of
 helper functions to mine blocks, construct transactions, and create function
-arguments. Inspect the source or see the Clarinet documentation for a full
+arguments. Inspect the source or see the [Clarinet JS SDK documentation](https://docs.hiro.so/tools/clarinet/sdk-reference) for a full
 overview.
 
 ### Testing the multiplayer aspect
