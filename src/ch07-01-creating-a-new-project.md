@@ -57,7 +57,7 @@ to the configuration file.
 
 ```bash
 Creating file contracts/counter.clar
-Creating file tests/counter_test.ts
+Creating file tests/counter.test.ts
 Adding contract counter to Clarinet.toml
 ```
 

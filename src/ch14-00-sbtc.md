@@ -9,6 +9,8 @@ Detailed information about sBTC are available at [stacks.co](https://docs.stacks
 
 ## Using sBTC
 
+Check out the dedicated [guide](https://docs.hiro.so/stacks/clarinet/guides/working-with-sbtc) to developing locally with sBTC.
+
 ### Unit tests with sBTC
 
 The following snippets verifies that 1 sBTC was successfully transferred from Alice to Bob. The mainnet contract is automatically mapped to the appropriate contract for unit tests in simnet.

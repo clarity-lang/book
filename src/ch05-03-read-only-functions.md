@@ -52,14 +52,11 @@ contract is rendered invalid, which means it cannot be deployed on the network.
 One thing that makes read-only functions very interesting is that they can be
 called _without_ actually sending a transaction! By using read-only functions,
 you can read the contract state for your application without requiring your
-users to pay transaction fees.
-[Stacks.js](https://github.com/blockstack/stacks.js) and the
-[Web Wallet Extension](https://www.hiro.so/wallet/install-web) have support for
-calling read-only functions built-in. You can try it yourself right now with the
-[Stacks Sandbox](https://explorer.stacks.co/sandbox/contract-call). Find a
+users to pay transaction fees. You can try it yourself right now with the
+[Stacks Explorer Sandbox](https://explorer.stacks.co/sandbox/contract-call). Find a
 contract with a read-only function and call it directly. Completely free!
 
-```Clarity,{"validation_code":"(asserts! (is-eq (get-counter-of 'ST1J4G6RR643BCG8G8SR6M2D9Z9KXT2NJDRK3FBTK) u5) \"That does not seem to be right, try again...\")\n(asserts! (is-eq (get-counter-of 'ST20ATRN26N9P05V2F1RHFRV24X8C8M3W54E427B2) u10) \"Almost there, keep going!\")\n(asserts! (is-eq (get-counter-of 'ST21HMSJATHZ888PD0S0SSTWP4J61TCRJYEVQ0STB) u0) \"get-counter-of should return u0 if the principal does not exist in the map.\")","hint":"Create a read-only function that returns the counter value for a given principal, or u0 if the principal does not exist in the map."}
+```Clarity,{"validation_code":"(asserts! (is-eq (get-counter-of 'ST1J4G6RR643BCG8G8SR6M2D9Z9KXT2NJDRK3FBTK) u5) "That does not seem to be right, try again...")\n(asserts! (is-eq (get-counter-of 'ST20ATRN26N9P05V2F1RHFRV24X8C8M3W54E427B2) u10) "Almost there, keep going!")\n(asserts! (is-eq (get-counter-of 'ST21HMSJATHZ888PD0S0SSTWP4J61TCRJYEVQ0STB) u0) "get-counter-of should return u0 if the principal does not exist in the map.")","hint":"Create a read-only function that returns the counter value for a given principal, or u0 if the principal does not exist in the map."}
 (define-map counters principal uint)
 
 (map-set counters 'ST1J4G6RR643BCG8G8SR6M2D9Z9KXT2NJDRK3FBTK u5)

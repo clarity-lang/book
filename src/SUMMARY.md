@@ -55,4 +55,5 @@
   - [Coding style](ch13-01-coding-style.md)
   - [What to store on-chain](ch13-02-what-to-store-on-chain.md)
   - [Contract upgradability](ch13-03-contract-upgradability.md)
-- [Links and resources](ch14-00-links-and-resources.md)
+- [Building with sBTC](ch14-00-sbtc.md)
+- [Links and resources](ch15-00-links-and-resources.md)
