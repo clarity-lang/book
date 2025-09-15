@@ -13,6 +13,28 @@ These include:
 - Creating a transaction for common actions like whitelisting an asset contract
   or listing an NFT.
 
+### Importing methods and hardcoding constants
+
+Unit tests in Clarinet require certain methods that will assist with the unit tests themselves in regards to the actual testing and conversion of Clarity values. Retrieving the default provided wallets in simnet are also available on the global variable `simnet`. We'll pull out 4 different accounts for this and hardcode our contract names.
+
+```ts
+import { ClarityEvent } from "@hirosystems/clarinet-sdk";
+import { Cl } from "@stacks/transactions";
+import { describe, test, expect } from "vitest";
+
+const accounts = simnet.getAccounts();
+const deployer = accounts.get("deployer")!;
+const wallet1 = accounts.get("wallet_1")!;
+const wallet2 = accounts.get("wallet_2")!;
+const wallet3 = accounts.get("wallet_3")!;
+
+const contractName = "tiny-market";
+const defaultNftAssetContract = "sip009-nft";
+const defaultPaymentAssetContract = "sip010-token";
+
+const contractPrincipal = `${deployer}.${contractName}`;
+```
+
 ### Token minting helpers
 
 To prevent hard-coding contract names in our tests, we define a constant for
@@ -23,74 +45,61 @@ information like the NFT asset contract principal, the token ID or amount, and
 the block data itself.
 
 ```ts
-const contractName = "tiny-market";
-
-const defaultNftAssetContract = "sip009-nft";
-const defaultPaymentAssetContract = "sip010-token";
-
-const contractPrincipal = (deployer: Account) =>
-  `${deployer.address}.${contractName}`;
-
 function mintNft({
-  chain,
   deployer,
   recipient,
   nftAssetContract = defaultNftAssetContract,
 }: {
-  chain: Chain;
-  deployer: Account;
-  recipient: Account;
+  deployer: string;
+  recipient: string;
   nftAssetContract?: string;
 }) {
-  const block = chain.mineBlock([
-    Tx.contractCall(
-      nftAssetContract,
-      "mint",
-      [types.principal(recipient.address)],
-      deployer.address
-    ),
-  ]);
-  block.receipts[0].result.expectOk();
-  const nftMintEvent = block.receipts[0].events[0].nft_mint_event;
-  const [nftAssetContractPrincipal, nftAssetId] =
-    nftMintEvent.asset_identifier.split("::");
+  const mintResponse = simnet.callPublicFn(
+    nftAssetContract,
+    "mint",
+    [Cl.principal(recipient)],
+    deployer
+  );
+  
+  expect(mintResponse.events).toHaveLength(1);
+  expect(mintResponse.events[0].event).toBe("nft_mint_event");
+  const nftMintEvent = mintResponse.events[0];
+
   return {
-    nftAssetContract: nftAssetContractPrincipal,
-    nftAssetId,
-    tokenId: nftMintEvent.value.substr(1),
-    block,
+    nftAssetContract: nftMintEvent.data.asset_identifier.split("::")[0],
+    tokenId: nftMintEvent.data.value.value,
   };
 }
 
 function mintFt({
-  chain,
   deployer,
   amount,
   recipient,
   paymentAssetContract = defaultPaymentAssetContract,
 }: {
-  chain: Chain;
-  deployer: Account;
+  deployer: string;
   amount: number;
-  recipient: Account;
+  recipient: string;
   paymentAssetContract?: string;
 }) {
-  const block = chain.mineBlock([
-    Tx.contractCall(
-      paymentAssetContract,
-      "mint",
-      [types.uint(amount), types.principal(recipient.address)],
-      deployer.address
-    ),
-  ]);
-  block.receipts[0].result.expectOk();
-  const ftMintEvent = block.receipts[0].events[0].ft_mint_event;
-  const [paymentAssetContractPrincipal, paymentAssetId] =
-    ftMintEvent.asset_identifier.split("::");
+  const mintResponse = simnet.callPublicFn(
+    paymentAssetContract,
+    "mint",
+    [Cl.uint(amount), Cl.principal(recipient)],
+    deployer
+  );
+
+  expect(mintResponse.result).toBeOk(Cl.bool(true));
+  expect(mintResponse.events).toHaveLength(1);
+  expect(mintResponse.events[0].event).toBe("ft_mint_event");
+
+  expect(mintResponse.events).toHaveLength(1);
+  expect(mintResponse.events[0].event).toBe("ft_mint_event");
+  const ftMintEvent = mintResponse.events[0];
+
   return {
-    paymentAssetContract: paymentAssetContractPrincipal,
-    paymentAssetId,
-    block,
+    paymentAssetContract: ftMintEvent.data.asset_identifier.split("::")[0],
+    paymentAssetId: ftMintEvent.data.asset_identifier.split("::")[1],
   };
 }
 ```
@@ -103,35 +112,26 @@ describes the transfer event. It will check that an event with the expected
 properties exists: the right NFT asset contract, token ID, and principal.
 
 ```ts
-interface Sip009NftTransferEvent {
-  type: string;
-  nft_transfer_event: {
-    asset_identifier: string;
-    sender: string;
-    recipient: string;
-    value: string;
-  };
-}
-
 function assertNftTransfer(
-  event: Sip009NftTransferEvent,
+  event: ClarityEvent,
   nftAssetContract: string,
   tokenId: number,
   sender: string,
   recipient: string
 ) {
-  assertEquals(typeof event, "object");
-  assertEquals(event.type, "nft_transfer_event");
-  assertEquals(
-    event.nft_transfer_event.asset_identifier.substr(
+  expect(typeof event).toBe("object")
+  expect(event.event).toBe("nft_transfer_event")
+
+  expect(
+    event.data.asset_identifier.substr(
       0,
       nftAssetContract.length
-    ),
-    nftAssetContract
-  );
-  event.nft_transfer_event.sender.expectPrincipal(sender);
-  event.nft_transfer_event.recipient.expectPrincipal(recipient);
-  event.nft_transfer_event.value.expectUint(tokenId);
+    )
+  ).toBe(nftAssetContract);
+
+  expect(event.data.sender).toBe(sender)
+  expect(event.data.recipient).toBe(recipient)
+  expect(event.data.value.value).toBe(tokenId)
 }
 ```
 
@@ -152,16 +152,14 @@ interface Order {
 }
 
 const makeOrder = (order: Order) =>
-  types.tuple({
-    taker: order.taker
-      ? types.some(types.principal(order.taker))
-      : types.none(),
-    "token-id": types.uint(order.tokenId),
-    expiry: types.uint(order.expiry),
-    price: types.uint(order.price),
+  Cl.tuple({
+    taker: order.taker ? Cl.some(Cl.principal(order.taker)) : Cl.none(),
+    "token-id": Cl.uint(order.tokenId),
+    expiry: Cl.uint(order.expiry),
+    price: Cl.uint(order.price),
     "payment-asset-contract": order.paymentAssetContract
-      ? types.some(types.principal(order.paymentAssetContract))
-      : types.none(),
+      ? Cl.some(Cl.principal(order.paymentAssetContract))
+      : Cl.none(),
   });
 ```
 
@@ -176,13 +174,13 @@ function.
 const whitelistAssetTx = (
   assetContract: string,
   whitelisted: boolean,
-  contractOwner: Account
+  contractOwner: string
 ) =>
-  Tx.contractCall(
+  simnet.callPublicFn(
     contractName,
     "set-whitelisted",
-    [types.principal(assetContract), types.bool(whitelisted)],
-    contractOwner.address
+    [Cl.principal(assetContract), Cl.bool(whitelisted)],
+    contractOwner
   );
 ```
 
@@ -196,17 +194,17 @@ string by Clarinet). If an `Order` is passed, all we have to do is call the
 ```ts
 const listOrderTx = (
   nftAssetContract: string,
-  maker: Account,
-  order: Order | string
+  maker: string,
+  order: Order
 ) =>
-  Tx.contractCall(
+  simnet.callPublicFn(
     contractName,
     "list-asset",
     [
-      types.principal(nftAssetContract),
-      typeof order === "string" ? order : makeOrder(order),
+      Cl.principal(nftAssetContract),
+      makeOrder(order),
     ],
-    maker.address
+    maker
   );
 ```
 
@@ -216,70 +214,48 @@ We can then use the helpers to construct our first tests: listing an NFT for
 sale for STX and for SIP010 fungible tokens.
 
 ```ts
-Clarinet.test({
-  name: "Can list an NFT for sale for STX",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker] = ["deployer", "wallet_1"].map(
-      (name) => accounts.get(name)!
-    );
+describe("Listing tests", () => {
+  test("Can list an NFT for sale for STX", () => {
     const { nftAssetContract, tokenId } = mintNft({
-      chain,
       deployer,
-      recipient: maker,
+      recipient: wallet1,
     });
-    const order: Order = { tokenId, expiry: 10, price: 10 };
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-    ]);
-    block.receipts[1].result.expectOk().expectUint(0);
-    assertNftTransfer(
-      block.receipts[1].events[0],
-      nftAssetContract,
-      tokenId,
-      maker.address,
-      contractPrincipal(deployer)
-    );
-  },
-});
 
-Clarinet.test({
-  name: "Can list an NFT for sale for any SIP010 fungible token",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker] = ["deployer", "wallet_1"].map(
-      (name) => accounts.get(name)!
+    const order: Order = { tokenId, expiry: 10, price: 10 };
+
+    whitelistAssetTx(nftAssetContract, true, deployer)
+
+    let listResponse = listOrderTx(nftAssetContract, wallet1, order)
+
+    expect(listResponse.result).toBeOk(Cl.uint(0));
+    expect(listResponse.events[0].event, "nft_transfer_event");
+    expect(listResponse.events[0].data.sender).toBe(wallet1);
+    expect(listResponse.events[0].data.recipient).toBe(
+      deployer + ".tiny-market"
     );
+  });
+
+  test("Can list an NFT for sale for any SIP010 fungible token", () => {
+
     const { nftAssetContract, tokenId } = mintNft({
-      chain,
       deployer,
-      recipient: maker,
+      recipient: wallet1,
     });
-    const { paymentAssetContract } = mintFt({
-      chain,
-      deployer,
-      recipient: maker,
-      amount: 1,
-    });
-    const order: Order = {
-      tokenId,
-      expiry: 10,
-      price: 10,
-      paymentAssetContract,
-    };
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      whitelistAssetTx(paymentAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-    ]);
-    block.receipts[2].result.expectOk().expectUint(0);
-    assertNftTransfer(
-      block.receipts[2].events[0],
-      nftAssetContract,
-      tokenId,
-      maker.address,
-      contractPrincipal(deployer)
-    );
-  },
+
+    let { paymentAssetContract, paymentAssetId } = mintFt({deployer, amount: 100, recipient: wallet1})
+
+    const order: Order = { tokenId, expiry: 10, price: 10, paymentAssetContract };
+
+    whitelistAssetTx(nftAssetContract, true, deployer)
+    whitelistAssetTx(paymentAssetContract, true, deployer)
+
+    let listResponse = listOrderTx(nftAssetContract, wallet1, order)
+
+    expect(listResponse.result).toBeOk(Cl.uint(0));
+
+    let nftTransferEvent = listResponse.events.find(e => e.event === 'nft_transfer_event')!
+    assertNftTransfer(nftTransferEvent, nftAssetContract, tokenId, wallet1, contractPrincipal)
+  });
 });
 ```
 
@@ -292,69 +268,67 @@ A listing call should fail under the following circumstances:
 - Someone is trying to list an NFT for sale that the sender does not own.
 
 ```ts
-Clarinet.test({
-  name: "Cannot list an NFT for sale if the expiry is in the past",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker] = ["deployer", "wallet_1"].map(
-      (name) => accounts.get(name)!
-    );
-    const { nftAssetContract, tokenId } = mintNft({
-      chain,
-      deployer,
-      recipient: maker,
-    });
-    const expiry = 10;
-    const order: Order = { tokenId, expiry, price: 10 };
-    chain.mineEmptyBlockUntil(expiry + 1);
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-    ]);
-    block.receipts[1].result.expectErr().expectUint(1000);
-    assertEquals(block.receipts[1].events.length, 0);
-  },
-});
+describe("Invalid listings", () => {
+  test("Cannot list an NFT for sale if the expiry is in the past", () => {
 
-Clarinet.test({
-  name: "Cannot list an NFT for sale for nothing",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker] = ["deployer", "wallet_1"].map(
-      (name) => accounts.get(name)!
-    );
     const { nftAssetContract, tokenId } = mintNft({
-      chain,
       deployer,
-      recipient: maker,
+      recipient: wallet1,
     });
+
+    const { paymentAssetContract, paymentAssetId } = mintFt({
+      deployer,
+      recipient: wallet1,
+      amount: 1,
+    });
+
+    const order: Order = {
+      tokenId,
+      expiry: 10,
+      price: 10,
+      paymentAssetContract,
+    };
+
+    whitelistAssetTx(nftAssetContract, true, deployer)
+    whitelistAssetTx(paymentAssetContract, true, deployer)
+
+    let listResponse = listOrderTx(nftAssetContract, wallet1, order)
+
+    expect(listResponse.result).toBeOk(Cl.uint(0));
+  });
+
+  test("Cannot list an NFT for sale for nothing", () => {
+
+    const { nftAssetContract, tokenId } = mintNft({
+      deployer,
+      recipient: wallet1,
+    });
+
     const order: Order = { tokenId, expiry: 10, price: 0 };
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-    ]);
-    block.receipts[1].result.expectErr().expectUint(1001);
-    assertEquals(block.receipts[1].events.length, 0);
-  },
-});
 
-Clarinet.test({
-  name: "Cannot list an NFT for sale that the sender does not own",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker, taker] = ["deployer", "wallet_1", "wallet_2"].map(
-      (name) => accounts.get(name)!
-    );
+    whitelistAssetTx(nftAssetContract, true, deployer)
+
+    let listResponse = listOrderTx(nftAssetContract, wallet1, order)
+
+    expect(listResponse.result).toBeErr(Cl.uint(1001));
+  });
+
+  test("Cannot list an NFT for sale that the sender does not own", () => {
+
     const { nftAssetContract, tokenId } = mintNft({
-      chain,
       deployer,
-      recipient: taker,
+      recipient: wallet2,
     });
+
     const order: Order = { tokenId, expiry: 10, price: 10 };
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-    ]);
-    block.receipts[1].result.expectErr().expectUint(1);
-    assertEquals(block.receipts[1].events.length, 0);
-  },
+
+    whitelistAssetTx(nftAssetContract, true, deployer)
+
+    let listResponse = listOrderTx(nftAssetContract, wallet3, order)
+
+    expect(listResponse.result).toBeErr(Cl.uint(1));
+    expect(listResponse.events).toHaveLength(0);
+  });
 });
 ```
 
@@ -363,66 +337,53 @@ Clarinet.test({
 Only the maker can cancel an active listing, we will cover this with two tests.
 
 ```ts
-Clarinet.test({
-  name: "Maker can cancel a listing",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker] = ["deployer", "wallet_1"].map(
-      (name) => accounts.get(name)!
-    );
-    const { nftAssetContract, tokenId } = mintNft({
-      chain,
-      deployer,
-      recipient: maker,
-    });
-    const order: Order = { tokenId, expiry: 10, price: 10 };
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-      Tx.contractCall(
-        contractName,
-        "cancel-listing",
-        [types.uint(0), types.principal(nftAssetContract)],
-        maker.address
-      ),
-    ]);
-    block.receipts[2].result.expectOk().expectBool(true);
-    assertNftTransfer(
-      block.receipts[2].events[0],
-      nftAssetContract,
-      tokenId,
-      contractPrincipal(deployer),
-      maker.address
-    );
-  },
-});
+describe("Cancelling listings", () => {
+  test("Maker can cancel a listing", () => {
 
-Clarinet.test({
-  name: "Non-maker cannot cancel listing",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker, otherAccount] = [
-      "deployer",
-      "wallet_1",
-      "wallet_2",
-    ].map((name) => accounts.get(name)!);
     const { nftAssetContract, tokenId } = mintNft({
-      chain,
       deployer,
-      recipient: maker,
+      recipient: wallet1,
     });
+
     const order: Order = { tokenId, expiry: 10, price: 10 };
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-      Tx.contractCall(
-        contractName,
-        "cancel-listing",
-        [types.uint(0), types.principal(nftAssetContract)],
-        otherAccount.address
-      ),
-    ]);
-    block.receipts[2].result.expectErr().expectUint(2001);
-    assertEquals(block.receipts[2].events.length, 0);
-  },
+
+    whitelistAssetTx(nftAssetContract, true, deployer)
+
+    let listResponse = listOrderTx(nftAssetContract, wallet1, order)
+
+    const cancelResponse = simnet.callPublicFn(
+      contractName,
+      "cancel-listing",
+      [listResponse.result.value, Cl.principal(nftAssetContract)],
+      wallet1
+    );
+
+    expect(cancelResponse.result).toBeOk(Cl.bool(true));
+  });
+
+  test("Non-maker cannot cancel listing", () => {
+
+    const { nftAssetContract, tokenId } = mintNft({
+      deployer,
+      recipient: wallet1,
+    });
+
+    const order: Order = { tokenId, expiry: 10, price: 10 };
+
+    whitelistAssetTx(nftAssetContract, true, deployer)
+
+    listOrderTx(nftAssetContract, wallet1, order)
+
+    const cancelResponse = simnet.callPublicFn(
+      contractName,
+      "cancel-listing",
+      [Cl.uint(0), Cl.principal(nftAssetContract)],
+      wallet2
+    );
+
+    expect(cancelResponse.result).toBeErr(Cl.uint(2001));
+    expect(cancelResponse.events).toHaveLength(0);
+  });
 });
 ```
 
@@ -434,75 +395,60 @@ information we expect. The next test verifies that retrieving a listing that is
 cancelled or does not exist returns `none`.
 
 ```ts
-Clarinet.test({
-  name: "Can get listings that have not been cancelled",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker] = ["deployer", "wallet_1"].map(
-      (name) => accounts.get(name)!
-    );
+describe("Retrieving listings", () => {
+  test("Can get listings that have not been cancelled", () => {
     const { nftAssetContract, tokenId } = mintNft({
-      chain,
       deployer,
-      recipient: maker,
+      recipient: wallet1,
     });
+
     const order: Order = { tokenId, expiry: 10, price: 10 };
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-    ]);
-    const listingIdUint = block.receipts[1].result.expectOk();
-    const receipt = chain.callReadOnlyFn(
-      contractName,
+
+    whitelistAssetTx(nftAssetContract, true, deployer)
+
+    let listResponse = listOrderTx(nftAssetContract, wallet1, order)
+
+    let receipt = simnet.callReadOnlyFn(
+      contractPrincipal,
       "get-listing",
-      [listingIdUint],
-      deployer.address
-    );
-    const listing: { [key: string]: string } = receipt.result
-      .expectSome()
-      .expectTuple() as any;
+      [listResponse.result.value],
+      deployer
+    )
 
-    listing["expiry"].expectUint(order.expiry);
-    listing["maker"].expectPrincipal(maker.address);
-    listing["payment-asset-contract"].expectNone();
-    listing["price"].expectUint(order.price);
-    listing["taker"].expectNone();
-    listing["nft-asset-contract"].expectPrincipal(nftAssetContract);
-    listing["token-id"].expectUint(tokenId);
-  },
-});
+    let listingInfo = receipt.result.value.value
 
-Clarinet.test({
-  name: "Cannot get listings that have been cancelled or do not exist",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker] = ["deployer", "wallet_1"].map(
-      (name) => accounts.get(name)!
-    );
+    expect(listingInfo['token-id']).toBeUint(1)
+  })
+
+  test("Cannot get listings that have been cancelled or do not exist", () => {
     const { nftAssetContract, tokenId } = mintNft({
-      chain,
       deployer,
-      recipient: maker,
+      recipient: wallet1,
     });
+
     const order: Order = { tokenId, expiry: 10, price: 10 };
-    chain.mineBlock([
-      listOrderTx(nftAssetContract, maker, order),
-      Tx.contractCall(
-        contractName,
-        "cancel-listing",
-        [types.uint(0), types.principal(nftAssetContract)],
-        maker.address
-      ),
-    ]);
-    const receipts = [types.uint(0), types.uint(999)].map((listingId) =>
-      chain.callReadOnlyFn(
-        contractName,
-        "get-listing",
-        [listingId],
-        deployer.address
-      )
-    );
-    receipts.map((receipt) => receipt.result.expectNone());
-  },
-});
+
+    whitelistAssetTx(nftAssetContract, true, deployer)
+
+    let listResponse = listOrderTx(nftAssetContract, wallet1, order)
+
+    let cancelListingResponse = simnet.callPublicFn(
+      contractPrincipal,
+      'cancel-listing',
+      [listResponse.result.value, Cl.principal(nftAssetContract)],
+      wallet1
+    )
+    
+    let receipt = simnet.callReadOnlyFn(
+      contractPrincipal,
+      "get-listing",
+      [listResponse.result.value],
+      deployer
+    )
+
+    expect(receipt.result).toBeNone()
+  })
+})
 ```
 
 ### Fulfilling listings
@@ -512,93 +458,71 @@ Since a seller can list an NFT for sale for either STX or SIP010 tokens, we
 write a separate test for both.
 
 ```ts
-Clarinet.test({
-  name: "Can fulfil an active listing with STX",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker, taker] = ["deployer", "wallet_1", "wallet_2"].map(
-      (name) => accounts.get(name)!
-    );
+describe("Fulfilling listings", () => {
+  test("Can fulfill an active listing with STX", () => {
     const { nftAssetContract, tokenId } = mintNft({
-      chain,
       deployer,
-      recipient: maker,
+      recipient: wallet1,
     });
+    
     const order: Order = { tokenId, expiry: 10, price: 10 };
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-      Tx.contractCall(
-        contractName,
-        "fulfil-listing-stx",
-        [types.uint(0), types.principal(nftAssetContract)],
-        taker.address
-      ),
-    ]);
-    block.receipts[2].result.expectOk().expectUint(0);
-    assertNftTransfer(
-      block.receipts[2].events[0],
-      nftAssetContract,
-      tokenId,
-      contractPrincipal(deployer),
-      taker.address
-    );
-    block.receipts[2].events.expectSTXTransferEvent(
-      order.price,
-      taker.address,
-      maker.address
-    );
-  },
-});
 
-Clarinet.test({
-  name: "Can fulfil an active listing with SIP010 fungible tokens",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker, taker] = ["deployer", "wallet_1", "wallet_2"].map(
-      (name) => accounts.get(name)!
+    whitelistAssetTx(nftAssetContract, true, deployer)
+
+    let listResponse = listOrderTx(nftAssetContract, wallet1, order)
+
+    const fulfilResponse = simnet.callPublicFn(
+      contractName,
+      "fulfil-listing-stx",
+      [Cl.uint(0), Cl.principal(nftAssetContract)],
+      wallet2
     );
-    const price = 50;
+
+    let nftTransferEvent = fulfilResponse.events.find(e => e.event === 'nft_transfer_event')!
+
+    assertNftTransfer(nftTransferEvent, nftAssetContract, tokenId, contractPrincipal, wallet2)
+    
+    expect(fulfilResponse.result).toBeOk(Cl.uint(0));
+
+    expect(fulfilResponse.events[1].event).toBe("stx_transfer_event");
+
+    expect(fulfilResponse.events[1].data).toMatchObject({
+      amount: order.price.toString(),
+      sender: wallet2,
+      recipient: wallet1,
+    });
+  });
+
+  test("Can fulfil an active listing with SIP010 fungible tokens", () => {
     const { nftAssetContract, tokenId } = mintNft({
-      chain,
       deployer,
-      recipient: maker,
+      recipient: wallet1,
     });
-    const { paymentAssetContract, paymentAssetId } = mintFt({
-      chain,
-      deployer,
-      recipient: taker,
-      amount: price,
-    });
-    const order: Order = { tokenId, expiry: 10, price, paymentAssetContract };
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      whitelistAssetTx(paymentAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-      Tx.contractCall(
-        contractName,
-        "fulfil-listing-ft",
-        [
-          types.uint(0),
-          types.principal(nftAssetContract),
-          types.principal(paymentAssetContract),
-        ],
-        taker.address
-      ),
-    ]);
-    block.receipts[3].result.expectOk().expectUint(0);
-    assertNftTransfer(
-      block.receipts[3].events[0],
-      nftAssetContract,
-      tokenId,
-      contractPrincipal(deployer),
-      taker.address
+
+    let { paymentAssetContract, paymentAssetId } = mintFt({deployer, amount: 100, recipient: wallet1})
+    mintFt({deployer, amount: 100, recipient: wallet2})
+
+    const order: Order = { tokenId, expiry: 10, price: 10, paymentAssetContract };
+
+    whitelistAssetTx(nftAssetContract, true, deployer)
+    whitelistAssetTx(paymentAssetContract, true, deployer)
+
+    let listResponse = listOrderTx(nftAssetContract, wallet1, order)
+
+    expect(listResponse.result).toBeOk(Cl.uint(0));
+
+    let nftTransferEvent = listResponse.events.find(e => e.event === 'nft_transfer_event')!
+    assertNftTransfer(nftTransferEvent, nftAssetContract, tokenId, wallet1, contractPrincipal)
+
+    const fulfilResponse = simnet.callPublicFn(
+      contractName,
+      "fulfil-listing-ft",
+      [Cl.uint(0), Cl.principal(nftAssetContract), Cl.principal(paymentAssetContract)],
+      wallet2
     );
-    block.receipts[3].events.expectFungibleTokenTransferEvent(
-      price,
-      taker.address,
-      maker.address,
-      paymentAssetId
-    );
-  },
+
+    expect(fulfilResponse.result).toBeOk(Cl.uint(0))    
+  })
 });
 ```
 
@@ -611,84 +535,75 @@ There are some basic situations in which fulfilment fails, these are:
 - A buyer is trying to fulfil a listing that has expired.
 
 ```ts
-Clarinet.test({
-  name: "Cannot fulfil own listing",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker] = ["deployer", "wallet_1"].map(
-      (name) => accounts.get(name)!
-    );
+describe("Basic fulfilment errors", () => {
+  test("Cannot fulfil own listing", () => {
     const { nftAssetContract, tokenId } = mintNft({
-      chain,
       deployer,
-      recipient: maker,
+      recipient: wallet1,
     });
+    
     const order: Order = { tokenId, expiry: 10, price: 10 };
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-      Tx.contractCall(
-        contractName,
-        "fulfil-listing-stx",
-        [types.uint(0), types.principal(nftAssetContract)],
-        maker.address
-      ),
-    ]);
-    block.receipts[2].result.expectErr().expectUint(2005);
-    assertEquals(block.receipts[2].events.length, 0);
-  },
-});
 
-Clarinet.test({
-  name: "Cannot fulfil an unknown listing",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker, taker] = ["deployer", "wallet_1", "wallet_2"].map(
-      (name) => accounts.get(name)!
-    );
-    const { nftAssetContract } = mintNft({ chain, deployer, recipient: maker });
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      Tx.contractCall(
-        contractName,
-        "fulfil-listing-stx",
-        [types.uint(0), types.principal(nftAssetContract)],
-        taker.address
-      ),
-    ]);
-    block.receipts[1].result.expectErr().expectUint(2000);
-    assertEquals(block.receipts[1].events.length, 0);
-  },
-});
+    whitelistAssetTx(nftAssetContract, true, deployer)
 
-Clarinet.test({
-  name: "Cannot fulfil an expired listing",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker, taker] = ["deployer", "wallet_1", "wallet_2"].map(
-      (name) => accounts.get(name)!
+    listOrderTx(nftAssetContract, wallet1, order)
+
+    const fulfilResponse = simnet.callPublicFn(
+      contractName,
+      "fulfil-listing-stx",
+      [Cl.uint(0), Cl.principal(nftAssetContract)],
+      wallet1
     );
-    const expiry = 10;
+
+    expect(fulfilResponse.result).toBeErr(Cl.uint(2005))    
+  })
+
+  test("Cannot fulfil an unknown listing", () => {
     const { nftAssetContract, tokenId } = mintNft({
-      chain,
       deployer,
-      recipient: maker,
+      recipient: wallet1,
     });
-    const order: Order = { tokenId, expiry, price: 10 };
-    chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-    ]);
-    chain.mineEmptyBlockUntil(expiry + 1);
-    const block = chain.mineBlock([
-      Tx.contractCall(
-        contractName,
-        "fulfil-listing-stx",
-        [types.uint(0), types.principal(nftAssetContract)],
-        taker.address
-      ),
-    ]);
-    block.receipts[0].result.expectErr().expectUint(2002);
-    assertEquals(block.receipts[0].events.length, 0);
-  },
-});
+    
+    const order: Order = { tokenId, expiry: 10, price: 10 };
+
+    whitelistAssetTx(nftAssetContract, true, deployer)
+
+    listOrderTx(nftAssetContract, wallet1, order)
+
+    const fulfilResponse = simnet.callPublicFn(
+      contractName,
+      "fulfil-listing-stx",
+      [Cl.uint(8), Cl.principal(nftAssetContract)],
+      wallet1
+    );
+
+    expect(fulfilResponse.result).toBeErr(Cl.uint(2000))   
+  })
+
+  test("Cannot fulfil an expired listing", () => {
+    const { nftAssetContract, tokenId } = mintNft({
+      deployer,
+      recipient: wallet1,
+    });
+    
+    const order: Order = { tokenId, expiry: 10, price: 10 };
+
+    whitelistAssetTx(nftAssetContract, true, deployer)
+
+    listOrderTx(nftAssetContract, wallet1, order)
+
+    simnet.mineEmptyBlocks(50)
+
+    const fulfilResponse = simnet.callPublicFn(
+      contractName,
+      "fulfil-listing-stx",
+      [Cl.uint(0), Cl.principal(nftAssetContract)],
+      wallet2
+    );
+
+    expect(fulfilResponse.result).toBeErr(Cl.uint(2002))   
+  })
+})
 ```
 
 ### Wrong payment asset or trait reference
@@ -726,148 +641,114 @@ From this point on, `sip009-nft.clar` and `sip010-token.clar` will be
 instantiated twice under different names. Quite useful for our tests.
 
 ```ts
-Clarinet.test({
-  name: "Cannot fulfil a listing with a different NFT contract reference",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker, taker] = ["deployer", "wallet_1", "wallet_2"].map(
-      (name) => accounts.get(name)!
-    );
-    const expiry = 10;
+describe("Wrong payment asset or trait reference", () => {
+  test("Cannot fulfil a listing with a different NFT contract reference", () => {
     const { nftAssetContract, tokenId } = mintNft({
-      chain,
       deployer,
-      recipient: maker,
+      recipient: wallet1,
     });
+    
     const order: Order = { tokenId, expiry: 10, price: 10 };
-    const bogusNftAssetContract = `${deployer.address}.bogus-nft`;
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-      Tx.contractCall(
-        contractName,
-        "fulfil-listing-stx",
-        [types.uint(0), types.principal(bogusNftAssetContract)],
-        taker.address
-      ),
-    ]);
-    block.receipts[2].result.expectErr().expectUint(2003);
-    assertEquals(block.receipts[2].events.length, 0);
-  },
-});
 
-Clarinet.test({
-  name: "Cannot fulfil an active STX listing with SIP010 fungible tokens",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker, taker] = ["deployer", "wallet_1", "wallet_2"].map(
-      (name) => accounts.get(name)!
-    );
-    const price = 50;
-    const { nftAssetContract, tokenId } = mintNft({
-      chain,
-      deployer,
-      recipient: maker,
-    });
-    const { paymentAssetContract } = mintFt({
-      chain,
-      deployer,
-      recipient: taker,
-      amount: price,
-    });
-    const order: Order = { tokenId, expiry: 10, price };
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      whitelistAssetTx(paymentAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-      Tx.contractCall(
-        contractName,
-        "fulfil-listing-ft",
-        [
-          types.uint(0),
-          types.principal(nftAssetContract),
-          types.principal(paymentAssetContract),
-        ],
-        taker.address
-      ),
-    ]);
-    block.receipts[3].result.expectErr().expectUint(2004);
-    assertEquals(block.receipts[3].events.length, 0);
-  },
-});
+    whitelistAssetTx(nftAssetContract, true, deployer)
 
-Clarinet.test({
-  name: "Cannot fulfil an active SIP010 fungible token listing with STX",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker, taker] = ["deployer", "wallet_1", "wallet_2"].map(
-      (name) => accounts.get(name)!
-    );
-    const price = 50;
-    const { nftAssetContract, tokenId } = mintNft({
-      chain,
-      deployer,
-      recipient: maker,
-    });
-    const { paymentAssetContract } = mintFt({
-      chain,
-      deployer,
-      recipient: taker,
-      amount: price,
-    });
-    const order: Order = { tokenId, expiry: 10, price, paymentAssetContract };
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      whitelistAssetTx(paymentAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-      Tx.contractCall(
-        contractName,
-        "fulfil-listing-stx",
-        [types.uint(0), types.principal(nftAssetContract)],
-        taker.address
-      ),
-    ]);
-    block.receipts[3].result.expectErr().expectUint(2004);
-    assertEquals(block.receipts[3].events.length, 0);
-  },
-});
+    listOrderTx(nftAssetContract, wallet1, order)
 
-Clarinet.test({
-  name: "Cannot fulfil an active SIP010 fungible token listing with a different SIP010 fungible token contract reference",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker, taker] = ["deployer", "wallet_1", "wallet_2"].map(
-      (name) => accounts.get(name)!
+    const fulfilResponse = simnet.callPublicFn(
+      contractName,
+      "fulfil-listing-stx",
+      [Cl.uint(0), Cl.principal(`${deployer}.bogus-nft`)],
+      wallet2
     );
-    const price = 50;
+
+    expect(fulfilResponse.result).toBeErr(Cl.uint(2003))
+  })
+
+  test("Cannot fulfil an active STX listing with SIP010 fungible tokens", () => {
     const { nftAssetContract, tokenId } = mintNft({
-      chain,
       deployer,
-      recipient: maker,
+      recipient: wallet1,
     });
-    const { paymentAssetContract } = mintFt({
-      chain,
+
+    let { paymentAssetContract } = mintFt({deployer, amount: 100, recipient: wallet2})
+    
+    const order: Order = { tokenId, expiry: 10, price: 10 };
+
+    whitelistAssetTx(nftAssetContract, true, deployer)
+
+    listOrderTx(nftAssetContract, wallet1, order)
+
+    const fulfilResponse = simnet.callPublicFn(
+      contractName,
+      "fulfil-listing-ft",
+      [Cl.uint(0), Cl.principal(nftAssetContract), Cl.principal(paymentAssetContract)],
+      wallet2
+    );
+
+    expect(fulfilResponse.result).toBeErr(Cl.uint(2004))
+  })
+
+  test("Cannot fulfil an active SIP010 fungible token listing with STX", () => {
+    const { nftAssetContract, tokenId } = mintNft({
       deployer,
-      recipient: taker,
-      amount: price,
+      recipient: wallet1,
     });
-    const bogusPaymentAssetContract = `${deployer.address}.bogus-ft`;
-    const order: Order = { tokenId, expiry: 10, price, paymentAssetContract };
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      whitelistAssetTx(paymentAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-      Tx.contractCall(
-        contractName,
-        "fulfil-listing-ft",
-        [
-          types.uint(0),
-          types.principal(nftAssetContract),
-          types.principal(bogusPaymentAssetContract),
-        ],
-        taker.address
-      ),
-    ]);
-    block.receipts[3].result.expectErr().expectUint(2004);
-    assertEquals(block.receipts[3].events.length, 0);
-  },
-});
+
+    let { paymentAssetContract, paymentAssetId } = mintFt({deployer, amount: 100, recipient: wallet1})
+    mintFt({deployer, amount: 100, recipient: wallet2})
+
+    const order: Order = { tokenId, expiry: 10, price: 10, paymentAssetContract };
+
+    whitelistAssetTx(nftAssetContract, true, deployer)
+    whitelistAssetTx(paymentAssetContract, true, deployer)
+
+    let listResponse = listOrderTx(nftAssetContract, wallet1, order)
+
+    expect(listResponse.result).toBeOk(Cl.uint(0));
+
+    let nftTransferEvent = listResponse.events.find(e => e.event === 'nft_transfer_event')!
+    assertNftTransfer(nftTransferEvent, nftAssetContract, tokenId, wallet1, contractPrincipal)
+
+    const fulfilResponse = simnet.callPublicFn(
+      contractName,
+      "fulfil-listing-stx",
+      [Cl.uint(0), Cl.principal(nftAssetContract)],
+      wallet2
+    );
+
+    expect(fulfilResponse.result).toBeErr(Cl.uint(2004))
+  })
+
+  test("Cannot fulfil an active SIP010 fungible token listing with a different SIP010 fungible token contract reference", () => {
+    const { nftAssetContract, tokenId } = mintNft({
+      deployer,
+      recipient: wallet1,
+    });
+
+    let { paymentAssetContract } = mintFt({deployer, amount: 100, recipient: wallet1})
+
+    const order: Order = { tokenId, expiry: 10, price: 10, paymentAssetContract };
+
+    whitelistAssetTx(nftAssetContract, true, deployer)
+    whitelistAssetTx(paymentAssetContract, true, deployer)
+
+    let listResponse = listOrderTx(nftAssetContract, wallet1, order)
+
+    expect(listResponse.result).toBeOk(Cl.uint(0));
+
+    let nftTransferEvent = listResponse.events.find(e => e.event === 'nft_transfer_event')!
+    assertNftTransfer(nftTransferEvent, nftAssetContract, tokenId, wallet1, contractPrincipal)
+
+    const fulfilResponse = simnet.callPublicFn(
+      contractName,
+      "fulfil-listing-ft",
+      [Cl.uint(0), Cl.principal(nftAssetContract), Cl.principal(`${deployer}.bogus-ft`)],
+      wallet2
+    );
+
+    expect(fulfilResponse.result).toBeErr(Cl.uint(2004))
+  })
+})
 ```
 
 ### Insufficient balance
@@ -876,76 +757,64 @@ It should naturally be impossible to purchase an NFT if the buyer does not have
 sufficient payment asset balance. There should be no token events in such cases.
 
 ```ts
-Clarinet.test({
-  name: "Cannot fulfil an active STX listing with insufficient balance",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker, taker] = ["deployer", "wallet_1", "wallet_2"].map(
-      (name) => accounts.get(name)!
-    );
+describe("Insufficient balance", () => {
+  test("Cannot fulfil an active STX listing with insufficient balance", () => {
     const { nftAssetContract, tokenId } = mintNft({
-      chain,
       deployer,
-      recipient: maker,
+      recipient: wallet1,
     });
-    const order: Order = { tokenId, expiry: 10, price: taker.balance + 10 };
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-      Tx.contractCall(
-        contractName,
-        "fulfil-listing-stx",
-        [types.uint(0), types.principal(nftAssetContract)],
-        taker.address
-      ),
-    ]);
-    block.receipts[2].result.expectErr().expectUint(1);
-    assertEquals(block.receipts[2].events.length, 0);
-  },
-});
+    
+    const order: Order = { tokenId, expiry: 10, price: 10 };
 
-Clarinet.test({
-  name: "Cannot fulfil an active SIP010 fungible token listing with insufficient balance",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker, taker] = ["deployer", "wallet_1", "wallet_2"].map(
-      (name) => accounts.get(name)!
+    whitelistAssetTx(nftAssetContract, true, deployer)
+
+    let listResponse = listOrderTx(nftAssetContract, wallet1, order)
+
+    let listingId = listResponse.result.value
+
+    const assets = simnet.getAssetsMap();
+    const stxBalances = assets.get('STX')!;
+    const wallet2Balance = stxBalances.get(wallet2)!;
+    simnet.transferSTX(wallet2Balance, wallet3, wallet2)
+
+    const fulfilResponse = simnet.callPublicFn(
+      contractName,
+      "fulfil-listing-stx",
+      [listingId, Cl.principal(nftAssetContract)],
+      wallet2
     );
-    const price = 50;
+    
+    expect(fulfilResponse.result).toBeErr(Cl.uint(1))
+  })
+
+  test("Cannot fulfil an active SIP010 fungible token listing with insufficient balance", () => {
     const { nftAssetContract, tokenId } = mintNft({
-      chain,
       deployer,
-      recipient: maker,
+      recipient: wallet1,
     });
-    const { paymentAssetContract } = mintFt({
-      chain,
-      deployer,
-      recipient: taker,
-      amount: price,
-    });
-    const order: Order = {
-      tokenId,
-      expiry: 10,
-      price: taker.balance + 10,
-      paymentAssetContract,
-    };
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      whitelistAssetTx(paymentAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-      Tx.contractCall(
-        contractName,
-        "fulfil-listing-ft",
-        [
-          types.uint(0),
-          types.principal(nftAssetContract),
-          types.principal(paymentAssetContract),
-        ],
-        taker.address
-      ),
-    ]);
-    block.receipts[3].result.expectErr().expectUint(1);
-    assertEquals(block.receipts[3].events.length, 0);
-  },
-});
+
+    let { paymentAssetContract } = mintFt({deployer, amount: 100, recipient: wallet1})
+
+    const order: Order = { tokenId, expiry: 10, price: 10, paymentAssetContract };
+
+    whitelistAssetTx(nftAssetContract, true, deployer)
+    whitelistAssetTx(paymentAssetContract, true, deployer)
+
+    let listResponse = listOrderTx(nftAssetContract, wallet1, order)
+    let listingId = listResponse.result.value
+
+    expect(listResponse.result).toBeOk(Cl.uint(0));
+
+    const fulfilResponse = simnet.callPublicFn(
+      contractName,
+      "fulfil-listing-ft",
+      [listingId, Cl.principal(nftAssetContract), Cl.principal(paymentAssetContract)],
+      wallet3
+    );
+
+    expect(fulfilResponse.result).toBeErr(Cl.uint(1))  
+  })
+})
 ```
 
 ### Intended taker
@@ -956,82 +825,60 @@ are in order: one where an intended taker is indeed able to fulfil a listing,
 and another where an unintended take is not able to fulfil the listing.
 
 ```ts
-Clarinet.test({
-  name: "Intended taker can fulfil active listing",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker, taker] = ["deployer", "wallet_1", "wallet_2"].map(
-      (name) => accounts.get(name)!
-    );
+describe("Intended taker", () => {
+  test('"Intended taker can fulfill active listing"', () => {
     const { nftAssetContract, tokenId } = mintNft({
-      chain,
       deployer,
-      recipient: maker,
+      recipient: wallet1,
     });
-    const order: Order = {
-      tokenId,
-      expiry: 10,
-      price: 10,
-      taker: taker.address,
-    };
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-      Tx.contractCall(
-        contractName,
-        "fulfil-listing-stx",
-        [types.uint(0), types.principal(nftAssetContract)],
-        taker.address
-      ),
-    ]);
-    block.receipts[2].result.expectOk().expectUint(0);
-    assertNftTransfer(
-      block.receipts[2].events[0],
-      nftAssetContract,
-      tokenId,
-      contractPrincipal(deployer),
-      taker.address
-    );
-    block.receipts[2].events.expectSTXTransferEvent(
-      order.price,
-      taker.address,
-      maker.address
-    );
-  },
-});
 
-Clarinet.test({
-  name: "Unintended taker cannot fulfil active listing",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const [deployer, maker, taker, unintendedTaker] = [
-      "deployer",
-      "wallet_1",
-      "wallet_2",
-      "wallet_3",
-    ].map((name) => accounts.get(name)!);
-    const { nftAssetContract, tokenId } = mintNft({
-      chain,
-      deployer,
-      recipient: maker,
+    const order: Order = { tokenId, expiry: 10, price: 10, taker: wallet2 };
+
+    whitelistAssetTx(nftAssetContract, true, deployer)
+
+    let listResponse = listOrderTx(nftAssetContract, wallet1, order)
+    let listingId = listResponse.result.value
+
+    const fulfilResponse = simnet.callPublicFn(
+      contractName,
+      "fulfil-listing-stx",
+      [listingId, Cl.principal(nftAssetContract)],
+      wallet2
+    );
+
+    expect(fulfilResponse.result).toBeOk(Cl.uint(0));
+    expect(fulfilResponse.events[1].event).toBe("stx_transfer_event");
+
+    expect(fulfilResponse.events[1].data).toMatchObject({
+      amount: order.price.toString(),
+      sender: wallet2,
+      recipient: wallet1,
     });
-    const order: Order = {
-      tokenId,
-      expiry: 10,
-      price: 10,
-      taker: taker.address,
-    };
-    const block = chain.mineBlock([
-      whitelistAssetTx(nftAssetContract, true, deployer),
-      listOrderTx(nftAssetContract, maker, order),
-      Tx.contractCall(
-        contractName,
-        "fulfil-listing-stx",
-        [types.uint(0), types.principal(nftAssetContract)],
-        unintendedTaker.address
-      ),
-    ]);
-    block.receipts[2].result.expectErr().expectUint(2006);
-    assertEquals(block.receipts[2].events.length, 0);
-  },
+  });
+
+  test('Unintended taker cannot fulfill active listing', () => {
+    const { nftAssetContract, tokenId } = mintNft({
+      deployer,
+      recipient: wallet1,
+    });
+
+    const order: Order = { tokenId, expiry: 10, price: 10, taker: wallet2 };
+
+    whitelistAssetTx(nftAssetContract, true, deployer)
+
+    let listResponse = listOrderTx(nftAssetContract, wallet1, order)
+    let listingId = listResponse.result.value
+
+    const fulfilResponse = simnet.callPublicFn(
+      contractName,
+      "fulfil-listing-stx",
+      [listingId, Cl.principal(nftAssetContract)],
+      wallet3
+    );
+
+    expect(fulfilResponse.result).toBeErr(Cl.uint(2006));
+    expect(fulfilResponse.events).toHaveLength(0);
+  });
 });
 ```
 
@@ -1042,14 +889,12 @@ order. It can be useful to catch bugs that might not arise in a controller state
 with one listing and one purchase.
 
 ```ts
-Clarinet.test({
-  name: "Can fulfil multiple active listings in any order",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const deployer = accounts.get("deployer")!;
+describe("Multiple orders", () => {
+  test("Can fulfil multiple active listings in any order", () => {
     const expiry = 100;
 
     const randomSorter = () => Math.random() - 0.5;
-
+    
     // Take some makers and takers in random order.
     const makers = ["wallet_1", "wallet_2", "wallet_3", "wallet_4"]
       .sort(randomSorter)
@@ -1060,13 +905,14 @@ Clarinet.test({
 
     // Mint some NFTs so the IDs do not always start at zero.
     const mints = [...Array(1 + ~~(Math.random() * 10))].map(() =>
-      mintNft({ chain, deployer, recipient: deployer })
+      mintNft({ deployer, recipient: deployer })
     );
 
     // Mint an NFT for all makers and generate orders.
     const nfts = makers.map((recipient) =>
-      mintNft({ chain, deployer, recipient })
+      mintNft({ deployer, recipient })
     );
+
     const orders: Order[] = makers.map((maker, i) => ({
       tokenId: nfts[i].tokenId,
       expiry,
@@ -1074,52 +920,36 @@ Clarinet.test({
     }));
 
     // Whitelist asset contract
-    chain.mineBlock([
-      whitelistAssetTx(mints[0].nftAssetContract, true, deployer),
-    ]);
+    whitelistAssetTx(mints[0].nftAssetContract, true, deployer)
 
     // List all NFTs.
-    const block = chain.mineBlock(
-      makers.map((maker, i) =>
-        listOrderTx(nfts[i].nftAssetContract, maker, makeOrder(orders[i]))
+    let listingResponse = makers.map((maker, i) =>
+      listOrderTx(nfts[i].nftAssetContract, maker, orders[i])
+    )
+
+    let orderIdUints = listingResponse.map(receipt => receipt.result.value)
+
+    let fulfilResponse = takers.map((taker, i) =>
+      simnet.callPublicFn(
+        contractName,
+        "fulfil-listing-stx",
+        [orderIdUints[i], Cl.principal(nfts[i].nftAssetContract)],
+        taker
       )
-    );
-    const orderIdUints = block.receipts.map((receipt) =>
-      receipt.result.expectOk().toString()
-    );
+    )
 
-    // Attempt to fulfil all listings.
-    const block2 = chain.mineBlock(
-      takers.map((taker, i) =>
-        Tx.contractCall(
-          contractName,
-          "fulfil-listing-stx",
-          [orderIdUints[i], types.principal(nfts[i].nftAssetContract)],
-          taker.address
-        )
-      )
-    );
+    fulfilResponse.map((receipt, i) => {
+      expect(receipt.result).toBeOk(orderIdUints[i])
 
-    const contractAddress = contractPrincipal(deployer);
+      let nftTransferEvent = receipt.events.find(e => e.event === 'nft_transfer_event')!
+      assertNftTransfer(nftTransferEvent, mints[0].nftAssetContract, nfts[i].tokenId, contractPrincipal, takers[i])
 
-    // Assert that all orders were fulfilled and that the NFTs and STX have been tranferred to the appropriate principals.
-    block2.receipts.map((receipt, i) => {
-      assertEquals(receipt.result.expectOk(), orderIdUints[i]);
-      assertNftTransfer(
-        receipt.events[0],
-        nfts[i].nftAssetContract,
-        nfts[i].tokenId,
-        contractAddress,
-        takers[i].address
-      );
-      receipt.events.expectSTXTransferEvent(
-        orders[i].price,
-        takers[i].address,
-        makers[i].address
-      );
-    });
-  },
-});
+      let stxTransferEvent = receipt.events.find(e => e.event === 'stx_transfer_event')!
+
+      expect(Cl.standardPrincipal(stxTransferEvent.data.sender)).toBePrincipal(takers[i])
+    })    
+  })
+})
 ```
 
 That was quite a lot, but there we are!
