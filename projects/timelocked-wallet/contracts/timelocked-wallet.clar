@@ -20,7 +20,7 @@
 	(begin
 		(asserts! (is-eq tx-sender contract-owner) err-owner-only)
 		(asserts! (is-none (var-get beneficiary)) err-already-locked)
-		(asserts! (> unlock-at block-height) err-unlock-in-past)
+		(asserts! (> unlock-at stacks-block-height) err-unlock-in-past)
 		(asserts! (> amount u0) err-no-value)
 		(try! (stx-transfer? amount tx-sender (as-contract tx-sender)))
 		(var-set beneficiary (some new-beneficiary))
@@ -40,7 +40,7 @@
 (define-public (claim)
 	(begin
 		(asserts! (is-eq (some tx-sender) (var-get beneficiary)) err-beneficiary-only)
-		(asserts! (>= block-height (var-get unlock-height)) err-unlock-height-not-reached)
+		(asserts! (>= stacks-block-height (var-get unlock-height)) err-unlock-height-not-reached)
 		(as-contract (stx-transfer? (stx-get-balance tx-sender) tx-sender (unwrap-panic (var-get beneficiary))))
 	)
 )
