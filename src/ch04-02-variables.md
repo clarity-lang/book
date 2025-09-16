@@ -89,7 +89,7 @@ defining a complicated tuple type, simply space it out:
 
 ;; Change the value.
 (var-set high-score
-	{score: u10, who: (some tx-sender), at-height: block-height}
+	{score: u10, who: (some tx-sender), at-height: stacks-block-height}
 )
 
 ;; Print the new value.
