@@ -106,5 +106,5 @@ our own `(ok true)` at the end of the `begin`. By moving the transfer expression
 to the last line, its response no longer intermediary and will be returned from
 the `deposit` function—whether it is an `ok` or an `err`.
 
-The chapter on [best practices](ch14-00-best-practices.md) will teach you some
+The chapter on [best practices](ch13-00-best-practices.md) will teach you some
 techniques on how to spot code that can be simplified in the same manner.
