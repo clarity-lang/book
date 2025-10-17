@@ -669,3 +669,28 @@ pre,
 		flex-basis: 50%;
 	}
 }
+
+#search-bar-container{
+	display: block;
+	justify-content: center;
+	align-items: center;
+	margin: 0 0 2em;
+}
+
+#search-bar{
+	display: block;
+}
+
+#search-results{
+	display:block;
+	margin: 2em 0;
+}
+
+input[type="text"]{
+	display:block;
+	border: 1px solid #777;
+	border-radius: 1em;
+	padding: 1em;
+	width: 100%;
+	box-sizing: border-box;
+}

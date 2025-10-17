@@ -46,7 +46,11 @@
     "vitest": "3.2.4",
     "vitest-environment-clarinet": "2.3.0"
   },
+  "homepage": "https://github.com/clarity-lang/book#readme",
+  "description": "",
   "dependencies": {
-    "marked-highlight": "^2.2.2"
+    "fs": "^0.0.1-security",
+    "markdown-it": "^14.1.0",
+    "path": "^0.12.7"
   }
 }

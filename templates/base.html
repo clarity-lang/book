@@ -1,7 +1,8 @@
 <html>
 	<head>
-		<script src="/client.min.js" async></script>
-		<link rel="stylesheet" href="/style.css"/>
+		<script src="./client.min.js" async></script>
+		<link rel="stylesheet" href="./style.css"/>
+		<script src="./search.js" defer></script>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>@title - Clarity Book</title>
 	</head>
@@ -12,8 +13,12 @@
 			<label id="mobile_menu_overlay" for="mobile_menu_toggle"></label>
 			<section id="summary">@summary</section>
 			<section id="article">
+				<div id="search-bar-container">
+					<input type="text" id="search-bar" placeholder="Search..." />
+					<div id="search-results"></div>
+				</div>			
 				<article>@body</article>
-			</section>
+			</section>		
 		</div>
 	</body>
 </html>
