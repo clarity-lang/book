@@ -5,9 +5,10 @@ const fetch = require('node-fetch');
 const { build_page, link_page } = require('../lib/builder');
 const generateSearchIndex = require('./genSearchIndex'); 
 
-const repl_binary_url = 'https://clarity-repl.s3.amazonaws.com/clarity_repl.wasm';
+import { build_page, link_page } from "../lib/builder.js";
+import { fileURLToPath } from "node:url";
 
-const [,,input,output] = process.argv;
+const [input,output] = process.argv;
 const input_path = path.resolve(__dirname,input || '../src');
 const output_path = path.resolve(__dirname,output || '../build');
 const lib_path = path.resolve(__dirname, '../lib');

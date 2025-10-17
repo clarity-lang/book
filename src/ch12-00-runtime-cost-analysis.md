@@ -11,7 +11,7 @@ also used to reduce resource consumption when calling read-only functions.
 
 ## Execution costs
 
-In **Clarity**, execution costs are broken up into five different categories, 
+In **Clarity**, execution costs are broken up into five different categories,
 each with its own limit.
 
 ```txt
@@ -36,7 +36,7 @@ hash, therefore `(not false)` will consume less runtime costs than
 `(sha512 "hello world")` . This category is also affected by contract size.
 
 **Read count** limits how many times we can read from memory or chain state
-to a extract piece of information. It is affected by reading constants, 
+to a extract piece of information. It is affected by reading constants,
 variables, intermediate variables created with `let` , maps, but also by some
 functions that needs to save intermediate results during execution.
 
@@ -175,8 +175,8 @@ are comprehensive, then you do not need to do anything special to make use of
 this feature. The unit tests we wrote in
 [chapter 7.4](ch07-04-testing-your-contract.md) can be executed while also
 analysing costs by adding the `--costs` option. The full command is thus as
-follows: `clarinet test --costs`. You will see that a costs analysis table will
-be printed after the result of the unit tests.
+follows: `npm run test:report`. You will find file `costs-reports.json` in
+project root after running the tests.
 
 ```clarity,{"nonplayable":true}
 Running counter/tests/counter_test.ts
@@ -372,16 +372,16 @@ here is a very basic example of the process:
 ;; Unwinding removes the iterative function `fold` .
 (define-read-only (sum-values-unwind (values (list 10 uint)))
 	(+
-		(default-to u0 (element-at values u0))
-		(default-to u0 (element-at values u1))
-		(default-to u0 (element-at values u2))
-		(default-to u0 (element-at values u3))
-		(default-to u0 (element-at values u4))
-		(default-to u0 (element-at values u5))
-		(default-to u0 (element-at values u6))
-		(default-to u0 (element-at values u7))
-		(default-to u0 (element-at values u8))
-		(default-to u0 (element-at values u9))
+		(default-to u0 (element-at? values u0))
+		(default-to u0 (element-at? values u1))
+		(default-to u0 (element-at? values u2))
+		(default-to u0 (element-at? values u3))
+		(default-to u0 (element-at? values u4))
+		(default-to u0 (element-at? values u5))
+		(default-to u0 (element-at? values u6))
+		(default-to u0 (element-at? values u7))
+		(default-to u0 (element-at? values u8))
+		(default-to u0 (element-at? values u9))
 	)
 )
 ```

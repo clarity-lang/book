@@ -52,7 +52,7 @@ It contains a function that allows a user to deposit STX and will track
 individual user deposits. The function is invalid due to an unchecked
 intermediary response. Your challenge is to _try_ to locate and fix it.
 
-```Clarity,{"setup":["::mint_stx ST000000000000000000002AMW42H 10000000"]}
+```Clarity
 (define-map deposits principal uint)
 
 (define-read-only (get-total-deposit (who principal))

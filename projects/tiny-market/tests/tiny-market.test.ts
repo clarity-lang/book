@@ -1,23 +1,3 @@
-## Unit tests
-
-The `tiny-market` contract is more sizeable than what we have built before. We
-will make an effort to structure the unit tests to avoid repetition. Common
-actions are turned into helper functions so that we can call them when needed.
-These include:
-
-- Turning an `Account` and contract name into a contract principal string.
-- Minting a new token for testing, both for NFTs and payment assets.
-- Asserting that an NFT token transfer has happened. (Clarinet does not support
-  this yet.)
-- Creating an order tuple.
-- Creating a transaction for common actions like whitelisting an asset contract
-  or listing an NFT.
-
-### Importing methods and hardcoding constants
-
-Unit tests in Clarinet require certain methods that will assist with the unit tests themselves in regards to the actual testing and conversion of Clarity values. Retrieving the default provided wallets in simnet are also available on the global variable `simnet`. We'll pull out 4 different accounts for this and hardcode our contract names.
-
-```ts
 import { ClarityEvent } from "@hirosystems/clarinet-sdk";
 import { Cl } from "@stacks/transactions";
 import { describe, test, expect } from "vitest";
@@ -33,18 +13,29 @@ const defaultNftAssetContract = "sip009-nft";
 const defaultPaymentAssetContract = "sip010-token";
 
 const contractPrincipal = `${deployer}.${contractName}`;
-```
 
-### Token minting helpers
+function assertNftTransfer(
+  event: ClarityEvent,
+  nftAssetContract: string,
+  tokenId: number,
+  sender: string,
+  recipient: string
+) {
+  expect(typeof event).toBe("object")
+  expect(event.event).toBe("nft_transfer_event")
 
-To prevent hard-coding contract names in our tests, we define a constant for
-each. The helper functions will construct the contract call to the `mint`
-function and mine a block to include it. The chain and deployer parameters will
-be passed in by the tests themselves. The functions then return some helpful
-information like the NFT asset contract principal, the token ID or amount, and
-the block data itself.
+  expect(
+    event.data.asset_identifier.substr(
+      0,
+      nftAssetContract.length
+    )
+  ).toBe(nftAssetContract);
 
-```ts
+  expect(event.data.sender).toBe(sender)
+  expect(event.data.recipient).toBe(recipient)
+  expect(event.data.value.value).toBe(tokenId)
+}
+
 function mintNft({
   deployer,
   recipient,
@@ -102,47 +93,7 @@ function mintFt({
     paymentAssetId: ftMintEvent.data.asset_identifier.split("::")[1],
   };
 }
-```
 
-### Asserting NFT transfers
-
-NFT transfer events are emitted by Clarinet but no function exists to assert
-their existence. We therefore make our own and define a basic interface that
-describes the transfer event. It will check that an event with the expected
-properties exists: the right NFT asset contract, token ID, and principal.
-
-```ts
-function assertNftTransfer(
-  event: ClarityEvent,
-  nftAssetContract: string,
-  tokenId: number,
-  sender: string,
-  recipient: string
-) {
-  expect(typeof event).toBe("object")
-  expect(event.event).toBe("nft_transfer_event")
-
-  expect(
-    event.data.asset_identifier.substr(
-      0,
-      nftAssetContract.length
-    )
-  ).toBe(nftAssetContract);
-
-  expect(event.data.sender).toBe(sender)
-  expect(event.data.recipient).toBe(recipient)
-  expect(event.data.value.value).toBe(tokenId)
-}
-```
-
-### Order tuple helper
-
-Since listing assets by calling into `list-asset` is something that we will do
-quite often, we will also create a helper function that constructs the
-`net-asset` order tuple. The function takes an object with properties equal to
-that of the tuple, just camel-cased instead of with dashes.
-
-```ts
 interface Order {
   taker?: string;
   tokenId: number;
@@ -161,37 +112,7 @@ const makeOrder = (order: Order) =>
       ? Cl.some(Cl.principal(order.paymentAssetContract))
       : Cl.none(),
   });
-```
 
-### Whitelisting transaction
-
-The helper to create a whitelisting transaction is a one-liner. It takes the
-asset contract to whitelist and whether it should be whitelisted, finally the
-the contract owner that should send the transaction, as it is a guarded
-function.
-
-```ts
-const whitelistAssetTx = (
-  assetContract: string,
-  whitelisted: boolean,
-  contractOwner: string
-) =>
-  simnet.callPublicFn(
-    contractName,
-    "set-whitelisted",
-    [Cl.principal(assetContract), Cl.bool(whitelisted)],
-    contractOwner
-  );
-```
-
-### Listing an NFT
-
-Listing a new order is likewise a one-liner. We will also make it so that you
-can pass in both an `Order` object or an order tuple (which is represented as a
-string by Clarinet). If an `Order` is passed, all we have to do is call the
-`makeOrder` helper.
-
-```ts
 const listOrderTx = (
   nftAssetContract: string,
   maker: string,
@@ -206,14 +127,19 @@ const listOrderTx = (
     ],
     maker
   );
-```
 
-### Listing tests
+const whitelistAssetTx = (
+  assetContract: string,
+  whitelisted: boolean,
+  contractOwner: string
+) =>
+  simnet.callPublicFn(
+    contractName,
+    "set-whitelisted",
+    [Cl.principal(assetContract), Cl.bool(whitelisted)],
+    contractOwner
+  );
 
-We can then use the helpers to construct our first tests: listing an NFT for
-sale for STX and for SIP010 fungible tokens.
-
-```ts
 describe("Listing tests", () => {
   test("Can list an NFT for sale for STX", () => {
     const { nftAssetContract, tokenId } = mintNft({
@@ -236,7 +162,6 @@ describe("Listing tests", () => {
   });
 
   test("Can list an NFT for sale for any SIP010 fungible token", () => {
-
     const { nftAssetContract, tokenId } = mintNft({
       deployer,
       recipient: wallet1,
@@ -257,20 +182,9 @@ describe("Listing tests", () => {
     assertNftTransfer(nftTransferEvent, nftAssetContract, tokenId, wallet1, contractPrincipal)
   });
 });
-```
 
-### Invalid listings
-
-A listing call should fail under the following circumstances:
-
-- The expiry block height of the order is in the past.
-- The NFT is being listed for nothing. (A price of zero.)
-- Someone is trying to list an NFT for sale that the sender does not own.
-
-```ts
 describe("Invalid listings", () => {
   test("Cannot list an NFT for sale if the expiry is in the past", () => {
-
     const { nftAssetContract, tokenId } = mintNft({
       deployer,
       recipient: wallet1,
@@ -298,7 +212,6 @@ describe("Invalid listings", () => {
   });
 
   test("Cannot list an NFT for sale for nothing", () => {
-
     const { nftAssetContract, tokenId } = mintNft({
       deployer,
       recipient: wallet1,
@@ -330,13 +243,7 @@ describe("Invalid listings", () => {
     expect(listResponse.events).toHaveLength(0);
   });
 });
-```
 
-### Cancelling listings
-
-Only the maker can cancel an active listing, we will cover this with two tests.
-
-```ts
 describe("Cancelling listings", () => {
   test("Maker can cancel a listing", () => {
 
@@ -385,16 +292,7 @@ describe("Cancelling listings", () => {
     expect(cancelResponse.events).toHaveLength(0);
   });
 });
-```
 
-### Retrieving listings
-
-Listings can be retrieved until they are cancelled. We will add a test that
-retrieves an active listing and make sure that the returned tuple contains the
-information we expect. The next test verifies that retrieving a listing that is
-cancelled or does not exist returns `none`.
-
-```ts
 describe("Retrieving listings", () => {
   test("Can get listings that have not been cancelled", () => {
     const { nftAssetContract, tokenId } = mintNft({
@@ -449,15 +347,7 @@ describe("Retrieving listings", () => {
     expect(receipt.result).toBeNone()
   })
 })
-```
 
-### Fulfilling listings
-
-And here are the ones we have been waiting for: the tests for order fulfilment.
-Since a seller can list an NFT for sale for either STX or SIP010 tokens, we
-write a separate test for both.
-
-```ts
 describe("Fulfilling listings", () => {
   test("Can fulfill an active listing with STX", () => {
     const { nftAssetContract, tokenId } = mintNft({
@@ -524,17 +414,7 @@ describe("Fulfilling listings", () => {
     expect(fulfilResponse.result).toBeOk(Cl.uint(0))    
   })
 });
-```
 
-### Basic fulfilment errors
-
-There are some basic situations in which fulfilment fails, these are:
-
-- The seller is trying to buy its own NFT,
-- A buyer is trying to fulfil a listing that does not exist; and,
-- A buyer is trying to fulfil a listing that has expired.
-
-```ts
 describe("Basic fulfilment errors", () => {
   test("Cannot fulfil own listing", () => {
     const { nftAssetContract, tokenId } = mintNft({
@@ -604,43 +484,7 @@ describe("Basic fulfilment errors", () => {
     expect(fulfilResponse.result).toBeErr(Cl.uint(2002))   
   })
 })
-```
 
-### Wrong payment asset or trait reference
-
-We now add tests that confirm that a listing cannot be fulfilled with the wrong
-payment asset. We test both STX and SIP010 tokens, as well as the situation
-where the transaction sender passes in the wrong asset trait reference.
-
-Since we have to test our listings against different assets we need to
-instantiate a bogus NFT and payment asset contract. We could copy and paste our
-test asset contracts but that seems tedious. Clarinet actually allows you to
-instantiate the same contract file under a different name. Open `Clarinet.toml`
-and add an entry for our `bogus-nft` by coping the entry for `sip009-nf`.
-
-```toml
-[contracts.sip009-nft]
-path = "contracts/sip009-nft.clar"
-
-[contracts.bogus-nft]
-path = "contracts/sip009-nft.clar"
-```
-
-Then we do the same for the payment asset. We will call the new entry
-`bogus-ft`.
-
-```toml
-[contracts.sip010-token]
-path = "contracts/sip010-token.clar"
-
-[contracts.bogus-ft]
-path = "contracts/sip010-token.clar"
-```
-
-From this point on, `sip009-nft.clar` and `sip010-token.clar` will be
-instantiated twice under different names. Quite useful for our tests.
-
-```ts
 describe("Wrong payment asset or trait reference", () => {
   test("Cannot fulfil a listing with a different NFT contract reference", () => {
     const { nftAssetContract, tokenId } = mintNft({
@@ -749,14 +593,7 @@ describe("Wrong payment asset or trait reference", () => {
     expect(fulfilResponse.result).toBeErr(Cl.uint(2004))
   })
 })
-```
 
-### Insufficient balance
-
-It should naturally be impossible to purchase an NFT if the buyer does not have
-sufficient payment asset balance. There should be no token events in such cases.
-
-```ts
 describe("Insufficient balance", () => {
   test("Cannot fulfil an active STX listing with insufficient balance", () => {
     const { nftAssetContract, tokenId } = mintNft({
@@ -815,16 +652,7 @@ describe("Insufficient balance", () => {
     expect(fulfilResponse.result).toBeErr(Cl.uint(1))  
   })
 })
-```
 
-### Intended taker
-
-Sellers have the ability to list an NFT for sale that only one specific
-principal can purchase, by setting the "intended taker" field. Another two tests
-are in order: one where an intended taker is indeed able to fulfil a listing,
-and another where an unintended take is not able to fulfil the listing.
-
-```ts
 describe("Intended taker", () => {
   test('"Intended taker can fulfill active listing"', () => {
     const { nftAssetContract, tokenId } = mintNft({
@@ -880,15 +708,7 @@ describe("Intended taker", () => {
     expect(fulfilResponse.events).toHaveLength(0);
   });
 });
-```
 
-### Multiple orders
-
-We add one final bonus test that fulfils a few random listings in a random
-order. It can be useful to catch bugs that might not arise in a controller state
-with one listing and one purchase.
-
-```ts
 describe("Multiple orders", () => {
   test("Can fulfil multiple active listings in any order", () => {
     const expiry = 100;
@@ -950,6 +770,3 @@ describe("Multiple orders", () => {
     })    
   })
 })
-```
-
-That was quite a lot, but there we are!
